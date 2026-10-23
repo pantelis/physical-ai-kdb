@@ -2,7 +2,7 @@ import pdfplumber
 import pytest
 from conftest import make_pdf
 
-from paiw_tools.locate import find_quote, norm
+from kdb_tools.locate import find_quote, norm
 
 LEFT = [(72, 700, "The first half of"), (72, 686, "the sentence ends.")]
 RIGHT = [(320, 700, "Other text here"), (320, 686, "more right text")]
@@ -75,7 +75,7 @@ def midline(tmp_path):
 
 
 def test_a_quote_over_two_lines_gets_one_box_per_line(midline):
-    from paiw_tools.locate import find_quote_lines
+    from kdb_tools.locate import find_quote_lines
     p, boxes = midline
     [lines] = find_quote_lines(p, "The quote starts here and ends.")
     assert len(lines) == 2
@@ -86,7 +86,7 @@ def test_a_quote_over_two_lines_gets_one_box_per_line(midline):
 
 
 def test_the_line_boxes_span_the_same_area_as_the_quote_bbox(midline):
-    from paiw_tools.locate import find_quote_lines
+    from kdb_tools.locate import find_quote_lines
     p, _ = midline
     [span] = find_quote(p, "The quote starts here and ends.")
     [lines] = find_quote_lines(p, "The quote starts here and ends.")

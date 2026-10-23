@@ -1,4 +1,4 @@
-"""okf-seed: write the course's seed ontology into a wiki bundle, grounded in the bundle's own PDFs.
+"""okf-seed: write the course's seed ontology into a kDB bundle, grounded in the bundle's own PDFs.
 
 Each term in the seed spec becomes a Term page under ontology/<domain>/<kind>/<slug>.md. Every
 scope sentence cites a quote from a library paper. The quote is found in papers/<arxiv-id>.pdf of
@@ -75,7 +75,7 @@ def already_highlighted(annotated: Path, page_no: int, bbox: list[float]) -> boo
 
 def seed(root: Path, spec_path: Path | None = None) -> Report:
     report = Report(TOOL)
-    spec = yaml.safe_load((spec_path or files("paiw_tools.seeds").joinpath("robotics.yaml")).read_text())
+    spec = yaml.safe_load((spec_path or files("kdb_tools.seeds").joinpath("robotics.yaml")).read_text())
     domain, papers = spec["domain"], spec["papers"]
     numeric = sorted(k for k, v in papers.items() if not isinstance(v, str))
     if numeric:

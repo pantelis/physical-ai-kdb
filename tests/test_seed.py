@@ -3,9 +3,9 @@ import hashlib
 import yaml
 from conftest import make_pdf
 
-from paiw_tools.ground import ground
-from paiw_tools.seed import seed
-from paiw_tools.validate import validate
+from kdb_tools.ground import ground
+from kdb_tools.seed import seed
+from kdb_tools.validate import validate
 
 SENT = "We count pick-and-place as one skill since it is typically performed in one motion."
 LIST = "The dataset includes skills such as pick-and-place, pushing, and more."
@@ -78,7 +78,7 @@ def test_seeding_twice_changes_nothing(bundle, tmp_path):
 
 def test_the_shipped_robotics_seed_is_well_formed():
     from importlib.resources import files
-    s = yaml.safe_load(files("paiw_tools.seeds").joinpath("robotics.yaml").read_text())
+    s = yaml.safe_load(files("kdb_tools.seeds").joinpath("robotics.yaml").read_text())
     slugs = {t["slug"] for t in s["terms"]}
     for t in s["terms"]:
         assert set(t.get("broader", [])) <= slugs, t["slug"]

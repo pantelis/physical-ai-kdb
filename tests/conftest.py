@@ -49,7 +49,7 @@ class Bundle:
         (root / "papers").mkdir(parents=True)
         (root / "annotated").mkdir()
         (root / "papers" / "kim2024.pdf").write_bytes(b"%PDF-1.4\n")
-        self.write("log.md", "# Update log\n\n## 2026-11-02\n* **Creation**: Built the wiki.\n")
+        self.write("log.md", "# Update log\n\n## 2026-11-02\n* **Creation**: Built the kDB.\n")
         self._pages: list[tuple[str, str]] = []
         self.reindex()
 
@@ -73,7 +73,7 @@ class Bundle:
 
 @pytest.fixture
 def bundle(tmp_path) -> Bundle:
-    return Bundle(tmp_path / "wiki")
+    return Bundle(tmp_path / "kdb")
 
 
 def make_pdf(path: Path, pages: list[list[tuple[float, float, str]]], size: int = 12) -> dict[str, list[float]]:

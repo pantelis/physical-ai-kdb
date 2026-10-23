@@ -1,4 +1,4 @@
-"""okf-ground: check every source in a wiki bundle against its PDF and its annotated copy.
+"""okf-ground: check every source in a kDB bundle against its PDF and its annotated copy.
 
 A sentence source must appear on its page and inside its bbox. A table-cell source's value must
 appear inside its bbox. Every bbox must match a highlight in the annotated copy of the paper.

@@ -2,7 +2,7 @@ import json
 
 from conftest import GOOD_BODY, GOOD_CELL, GOOD_SOURCE, concept
 
-from paiw_tools.validate import main, validate
+from kdb_tools.validate import main, validate
 
 
 def rules(report):
@@ -109,7 +109,7 @@ def test_a_relative_resource_names_where_it_was_looked_for_and_the_root_path(bun
 
 
 def test_a_log_without_date_headings_fails(bundle):
-    bundle.write("log.md", "# Update log\n\n- 2026-11-02: Built the wiki.\n")
+    bundle.write("log.md", "# Update log\n\n- 2026-11-02: Built the kDB.\n")
     assert "project.log" in errors(validate(bundle.root))
 
 

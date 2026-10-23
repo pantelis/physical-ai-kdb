@@ -3,7 +3,7 @@ import json
 import pytest
 from conftest import GOOD_CELL, GOOD_SOURCE, concept, highlight, make_pdf
 
-from paiw_tools.ground import ground, main
+from kdb_tools.ground import ground, main
 
 QUOTE = GOOD_SOURCE["quote"]
 CELL = "76.5"

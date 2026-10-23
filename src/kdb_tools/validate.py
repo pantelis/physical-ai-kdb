@@ -1,4 +1,4 @@
-"""okf-validate: check a wiki bundle's structure against OKF v0.2 and the project rules.
+"""okf-validate: check a kDB bundle's structure against OKF v0.2 and the project rules.
 
 It reads only markdown and frontmatter. It never opens a PDF; okf-ground does that.
 """

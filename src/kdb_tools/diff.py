@@ -1,4 +1,4 @@
-"""okf-diff: compare two versions of a wiki bundle and list every page that changed.
+"""okf-diff: compare two versions of a kDB bundle and list every page that changed.
 
 Give two bundle directories, or one bundle directory inside a git repository and two
 revisions with --git. An incremental ingest should change only the pages the new paper

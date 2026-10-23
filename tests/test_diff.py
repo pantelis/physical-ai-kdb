@@ -4,7 +4,7 @@ import subprocess
 
 from conftest import GOOD_BODY, concept, page
 
-from paiw_tools.diff import diff, main
+from kdb_tools.diff import diff, main
 
 STAMP = {"by": "team-1-agent/qwen3-32b", "at": "2026-11-02T18:00:00Z"}
 NEW_STAMP = {"by": "team-1-agent/qwen3-32b", "at": "2026-11-20T09:00:00Z"}

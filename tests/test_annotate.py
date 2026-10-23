@@ -2,8 +2,8 @@ import pdfplumber
 from conftest import GOOD_SOURCE, concept, make_pdf
 from pypdf import PdfReader
 
-from paiw_tools.annotate import highlight
-from paiw_tools.ground import ground
+from kdb_tools.annotate import highlight
+from kdb_tools.ground import ground
 
 QUOTE = "OpenVLA is trained on 970k robot episodes."
 
@@ -31,7 +31,7 @@ def test_text_that_is_not_on_the_page_is_reported_and_not_highlighted(tmp_path):
 def test_a_highlight_written_this_way_passes_okf_ground(bundle):
     pdf = bundle.root / "papers" / "kim2024.pdf"
     make_pdf(pdf, [[(72, 700, "Some words first. OpenVLA is trained"), (72, 686, "on 970k robot episodes. More words.")]])
-    from paiw_tools.locate import find_quote
+    from kdb_tools.locate import find_quote
     with pdfplumber.open(pdf) as doc:
         [bbox] = find_quote(doc.pages[0], QUOTE)
     highlight(pdf, bundle.root / "annotated" / "kim2024.pdf", [(1, QUOTE, GOOD_SOURCE["id"])])

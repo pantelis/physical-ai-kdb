@@ -1,29 +1,29 @@
 ---
 name: okf-checks
-description: Check the Physical AI Wiki bundle with okf-validate, okf-ground and okf-diff, and fix what they report. Use after writing or editing wiki pages, after annotating a PDF, and before finishing any build or ingest.
+description: Check the Physical AI kDB bundle with okf-validate, okf-ground and okf-diff, and fix what they report. Use after writing or editing kDB pages, after annotating a PDF, and before finishing any build or ingest.
 ---
 
 # OKF checks
 
-You build and maintain a wiki bundle in OKF v0.2. Three tools check it. They never change the
+You build and maintain a kDB bundle in OKF v0.2. Three tools check it. They never change the
 bundle; you fix what they report. Run them from the bundle's repository. The bundle root is the
-directory that holds `index.md`, `log.md`, `papers/` and `annotated/`; below it is `wiki/`.
+directory that holds `index.md`, `log.md`, `papers/` and `annotated/`; below it is `kdb/`.
 
 | Tool | What it checks | Opens PDFs |
 |---|---|---|
-| `okf-validate wiki --json` | frontmatter, sources, citations, index, log, entity names | no |
-| `okf-ground wiki --json` | every quote and table value against its PDF page and bbox, and every bbox against a highlight in `annotated/` | yes |
-| `okf-diff wiki --git <old> <new> --json` | which pages changed between two commits, and whether their `generated` stamps are right | no |
+| `okf-validate kdb --json` | frontmatter, sources, citations, index, log, entity names | no |
+| `okf-ground kdb --json` | every quote and table value against its PDF page and bbox, and every bbox against a highlight in `annotated/` | yes |
+| `okf-diff kdb --git <old> <new> --json` | which pages changed between two commits, and whether their `generated` stamps are right | no |
 
 If the commands are not found, install them once with
-`uv tool install git+https://github.com/pantelis/physical-ai-wiki`.
+`uv tool install git+https://github.com/pantelis/physical-ai-kdb`.
 
 ## When to run them
 
 1. After you write or edit pages, run `okf-validate`. It is fast, so run it often.
 2. After you annotate a PDF or add sources, run `okf-ground`.
 3. Before you finish a build or an `ingest`, run both and repeat until both report 0 errors.
-4. After you commit an `ingest`, run `okf-diff wiki --git HEAD~1 HEAD --json` and use its
+4. After you commit an `ingest`, run `okf-diff kdb --git HEAD~1 HEAD --json` and use its
    lists of added, changed and removed pages in the `log.md` entry and the findings report.
 
 ## Reading a report

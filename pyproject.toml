@@ -1,7 +1,7 @@
 [project]
-name = "paiw-tools"
+name = "kdb-tools"
 version = "0.1.0"
-description = "Checks for the Physical AI Wiki project: OKF validation, grounding against PDFs, and snapshot diffs"
+description = "Checks for the Physical AI kDB project: OKF validation, grounding against PDFs, and snapshot diffs"
 requires-python = ">=3.10"
 license = "MIT"
 dependencies = [
@@ -11,10 +11,10 @@ dependencies = [
 ]
 
 [project.scripts]
-okf-validate = "paiw_tools.validate:main"
-okf-ground = "paiw_tools.ground:main"
-okf-diff = "paiw_tools.diff:main"
-okf-seed = "paiw_tools.seed:main"
+okf-validate = "kdb_tools.validate:main"
+okf-ground = "kdb_tools.ground:main"
+okf-diff = "kdb_tools.diff:main"
+okf-seed = "kdb_tools.seed:main"
 
 [dependency-groups]
 dev = [
@@ -28,7 +28,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/paiw_tools"]
+packages = ["src/kdb_tools"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

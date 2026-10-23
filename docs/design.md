@@ -1,15 +1,20 @@
 # Tool design
 
-This repository ships three command-line tools and a Pi package. Students run the tools
-themselves, and their Pi agent runs them as part of every build and ingest. The course runs
-the same tools at grading time, so a clean run here means the mechanical checks will pass.
+This repository ships four command-line tools, the same checks as a Python package
+(`kdb_tools`), and an optional Pi package. Students run the tools themselves, and their agent
+calls them as part of every build and ingest. The course runs the same tools at grading time,
+so a clean run here means the mechanical checks will pass.
+
+A kDB (Knowledge DB) is a continuously updated, grounded information source. It is stored as an
+OKF v0.2 bundle: markdown pages with YAML frontmatter, kept in git.
 
 ## Roles
 
-Pi is the orchestrator. It reads papers, writes wiki pages and annotates PDFs through the
-student's own skills and tools. The tools in this repository do not call a model and do not
-write to the bundle. They only check it and report what is wrong. The `okf-checks` skill in
-`pi/skills/` tells Pi when to run each tool and how to act on the result.
+The student's agent, a harness they write with Pydantic AI, reads papers, writes kDB pages and
+annotates PDFs. `okf-validate`, `okf-ground` and `okf-diff` do not call a model and do not
+write to the bundle; they only check it and report what is wrong. `okf-seed` writes the seed
+ontology pages, their highlights and one log entry. The `okf-checks` skill in `pi/skills/` is
+for students who also use Pi: it tells Pi when to run each tool and how to act on the result.
 
 Every tool prints a human-readable report by default and a JSON report with `--json`. It
 exits with status 0 when there are no errors, 1 when there are errors, and 2 when it could
@@ -18,7 +23,7 @@ not run (for example, a missing directory). Warnings never change the exit statu
 ## Bundle layout
 
 ```text
-wiki/
+kdb/
   index.md          # lists every concept page
   log.md            # one entry per ingest, newest first
   <concept>.md      # one concept per page, in any subdirectory
@@ -95,7 +100,7 @@ term is one page under `ontology/<domain>/`, with fields modelled on W3C SKOS: `
 is a scope note, cited like any other prose. A term's domain is the directory after `ontology/`,
 so labels are unique within a domain and may repeat across domains.
 
-The seed ontology ships as `src/paiw_tools/seeds/robotics.yaml`. Each term lists its labels,
+The seed ontology ships as `src/kdb_tools/seeds/robotics.yaml`. Each term lists its labels,
 its `broader` terms, any verified `close_match` or `related_match` identifiers, and one or more
 scope sentences, each with the exact quote from a library paper that supports it. `okf-seed`
 finds every quote in the bundle's own `papers/<arxiv-id>.pdf`, starting with the page the spec
@@ -123,12 +128,12 @@ Opens the PDFs and checks every source against them.
 Quotes are matched against the page's characters in the order the PDF draws them, not against
 extracted page text. Extractors reorder lines: two columns at the same height come out
 interleaved, so a sentence can be on the page and still be missing from its text. The same
-matcher is available to agents as `paiw_tools.locate.find_quote(page, text)`, which returns the
+matcher is available to agents as `kdb_tools.locate.find_quote(page, text)`, which returns the
 bbox of every occurrence on a pdfplumber page, so an agent and the checker agree on where a
 quote is.
 
-`paiw_tools.locate.find_quote_lines(page, text)` gives the same matches as one box per line, and
-`paiw_tools.annotate.highlight` writes them as a single highlight with one quad per line, so the
+`kdb_tools.locate.find_quote_lines(page, text)` gives the same matches as one box per line, and
+`kdb_tools.annotate.highlight` writes them as a single highlight with one quad per line, so the
 highlight covers only the quoted words. Its rectangle is the union of the lines, which is what
 `ground.highlight` compares with the bbox.
 

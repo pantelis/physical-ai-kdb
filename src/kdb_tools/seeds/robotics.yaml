@@ -1,4 +1,4 @@
-# Seed ontology for the robotics domain of the Physical AI Wiki.
+# Seed ontology for the robotics domain of the Physical AI kDB.
 #
 # okf-seed writes one Term page per entry into ontology/robotics/<kind>/<slug>.md. Each scope
 # sentence cites a quote from a library paper; okf-seed finds the quote in the bundle's copy of the
