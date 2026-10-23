@@ -1,0 +1,118 @@
+# Tool design
+
+This repository ships three command-line tools and a Pi package. Students run the tools
+themselves, and their Pi agent runs them as part of every build and ingest. The course runs
+the same tools at grading time, so a clean run here means the mechanical checks will pass.
+
+## Roles
+
+Pi is the orchestrator. It reads papers, writes wiki pages and annotates PDFs through the
+student's own skills and tools. The tools in this repository do not call a model and do not
+write to the bundle. They only check it and report what is wrong. The `okf-checks` skill in
+`pi/skills/` tells Pi when to run each tool and how to act on the result.
+
+Every tool prints a human-readable report by default and a JSON report with `--json`. It
+exits with status 0 when there are no errors, 1 when there are errors, and 2 when it could
+not run (for example, a missing directory). Warnings never change the exit status.
+
+## Bundle layout
+
+```text
+wiki/
+  index.md          # lists every concept page
+  log.md            # one entry per ingest, newest first
+  <concept>.md      # one concept per page, in any subdirectory
+  papers/           # the original PDFs, unmodified
+  annotated/        # the annotated copies, same file names as papers/
+```
+
+Paths follow OKF section 6.2. A path that starts with `/` is relative to the bundle root, and
+any other path is relative to the page that contains it. Use the bundle-relative form, for
+example `resource: /papers/kim2024.pdf`, so a page can move without breaking its sources. The
+annotated copy of a paper is the file with the same name in `annotated/`. That directory can
+be changed with `--annotated`.
+
+## Coordinates
+
+A `bbox` is `[x0, y0, x1, y1]` in PDF points, in PDF user space: the origin is the bottom-left
+corner of the page and y grows upward. This is the space that PDF annotation rectangles use,
+so a highlight written by PdfCraft or pypdf can be compared with a bbox directly. Pages are
+numbered from 1.
+
+## Sources
+
+A source is either a sentence or a table cell.
+
+| Kind | Required keys |
+|---|---|
+| sentence | `id`, `resource`, `page`, `quote`, `bbox` |
+| table cell | `id`, `resource`, `page`, `table`, `row`, `column`, `value`, `bbox` |
+
+## Findings
+
+Each finding has a rule id, a level (`error` or `warning`), the page path, and a message. Rule
+ids that start with `okf.` come from the OKF v0.2 conformance section. Rule ids that start with
+`project.` are course rules, stricter than OKF, and listed on the project page.
+
+## okf-validate
+
+Checks the bundle's structure without opening any PDF.
+
+| Rule | Level | Check |
+|---|---|---|
+| `okf.frontmatter` | error | every non-reserved `.md` file has a parseable YAML frontmatter block |
+| `okf.type` | error | every frontmatter block has a non-empty `type` |
+| `okf.index` | error | an `index.md` has no frontmatter, except `okf_version` at the bundle root |
+| `okf.log` | error | every `##` heading in a `log.md` is an ISO date, `YYYY-MM-DD` |
+| `project.index` | error | the bundle root has `index.md`, and every concept page is linked from an `index.md` |
+| `project.log` | error | the bundle root has `log.md` |
+| `project.generated` | error | every concept has `generated.by` and an ISO 8601 `generated.at` |
+| `project.source` | error | every source is a well-formed sentence or table cell, with a unique `id` on its page and a `resource` that exists |
+| `project.citation` | error | every footnote label in the body is the `id` of a source on the same page |
+| `project.footnote` | warning | every cited footnote label has a footnote definition |
+| `project.unused-source` | warning | every source is cited at least once |
+| `project.uncited` | warning | every sentence of prose carries at least one citation |
+| `project.aliases` | error | `aliases` is a list of strings |
+| `project.entity` | error | no two pages share a title or alias after normalization |
+| `project.contested` | error | `contested_by` maps a source id on the page to a list of source ids that exist in the bundle |
+| `project.result` | error | a `Result` page has `conditions` with `benchmark`, `suite`, `trials` and `embodiment` |
+| `project.computation` | error | an `Attested Computation` page has `runtime: python` and either a `computation` file that exists or a `# Computation` python block |
+
+Name normalization for `project.entity` lowercases the name, writes π as `pi`, and drops every
+character that is not a letter or digit. So `OpenVLA-OFT` and `openvla oft` collide, while
+`π0` and `pi-zero` do not, which is why `aliases` exists.
+
+## okf-ground
+
+Opens the PDFs and checks every source against them.
+
+| Rule | Level | Check |
+|---|---|---|
+| `ground.page` | error | the page exists in the PDF |
+| `ground.quote` | error | the quote appears on the page, after normalizing whitespace, ligatures, quotes, dashes and line-break hyphens |
+| `ground.bbox` | error | the text inside the bbox contains the quote, or the table-cell value |
+| `ground.highlight` | error | the annotated copy has a highlight on that page whose rectangle overlaps the bbox with intersection over union of at least 0.5 |
+
+A quote that appears on the page but outside its bbox fails `ground.bbox`, not `ground.quote`,
+so the report says whether the text or the location is wrong.
+
+## okf-diff
+
+Compares two versions of a bundle, given as two directories or as two git revisions of the
+repository the bundle lives in (`--git <old> <new>`). It lists every concept page that was
+added, removed or changed, and for a changed page whether the body, the frontmatter or both
+changed.
+
+| Rule | Level | Check |
+|---|---|---|
+| `diff.rewrite` | error | a page whose content did not change is byte-identical (no reordered keys or reflowed text) |
+| `diff.stamp` | error | a page whose body did not change kept its `generated` stamp |
+| `diff.stale-stamp` | warning | a page whose body changed has a new `generated.at` |
+
+It also lists changes to `index.md`, `log.md` and the files under `papers/` and `annotated/`, so
+the findings report can be checked against them.
+
+## Not checked here
+
+Whether a cited sentence actually supports the claim attached to it is judged by a TA, not by
+these tools. The tools do not run Attested Computations yet.

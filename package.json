@@ -1,0 +1,11 @@
+{
+  "name": "physical-ai-wiki",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi package for the Physical AI Wiki project: the okf-checks skill that runs the bundle checks",
+  "keywords": ["pi-package"],
+  "license": "MIT",
+  "pi": {
+    "skills": ["./pi/skills"]
+  }
+}
