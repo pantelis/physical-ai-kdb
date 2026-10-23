@@ -61,3 +61,34 @@ def test_every_occurrence_is_returned(page):
 
 def test_ligatures_curly_quotes_and_dashes_compare_equal():
     assert norm("ﬁne-tuned “policy” – robot") == norm('fine-tuned "policy" - robot')
+
+
+MIDLINE = [(72, 300, "Before text. The quote starts"), (72, 286, "here and ends. After it.")]
+
+
+@pytest.fixture
+def midline(tmp_path):
+    pdf = tmp_path / "m.pdf"
+    boxes = make_pdf(pdf, [MIDLINE])
+    with pdfplumber.open(pdf) as doc:
+        yield doc.pages[0], boxes
+
+
+def test_a_quote_over_two_lines_gets_one_box_per_line(midline):
+    from paiw_tools.locate import find_quote_lines
+    p, boxes = midline
+    [lines] = find_quote_lines(p, "The quote starts here and ends.")
+    assert len(lines) == 2
+    first, second = lines
+    assert first[0] > boxes["Before text. The quote starts"][0] + 20  # starts after "Before text. "
+    assert second[2] < boxes["here and ends. After it."][2] - 20      # ends before " After it."
+    assert first[1] > second[1]                                       # the first line is higher
+
+
+def test_the_line_boxes_span_the_same_area_as_the_quote_bbox(midline):
+    from paiw_tools.locate import find_quote_lines
+    p, _ = midline
+    [span] = find_quote(p, "The quote starts here and ends.")
+    [lines] = find_quote_lines(p, "The quote starts here and ends.")
+    union = [min(b[0] for b in lines), min(b[1] for b in lines), max(b[2] for b in lines), max(b[3] for b in lines)]
+    assert union == span

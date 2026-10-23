@@ -61,11 +61,26 @@ print(spans)  # one [x0, y0, x1, y1] per occurrence, in PDF points from the bott
 
 `find_quote` matches the same way `okf-ground` does, so a bbox it returns passes the check.
 
+To write the highlights into the annotated copy, use `paiw_tools.annotate.highlight`. It finds
+each quote on its page and draws one highlight box per line, so only the quoted words are
+shaded. Give the bbox from your source entry when the text appears more than once on the page:
+
+```python
+from paiw_tools.annotate import highlight
+
+found = highlight(
+    "wiki/papers/fei2025.pdf",
+    "wiki/annotated/fei2025.pdf",
+    [(3, "97.1", "fei2025-t1-r2-c1", [190.64, 596.07, 207.72, 605.83])],  # page, text, comment, bbox
+)
+print(found)  # [True]: one flag per mark; False means the text is not on that page
+```
+
 ## Use them from Pi
 
-Your agent runs in [Pi](https://github.com/earendil-works/pi). This repository is also a Pi
-package with one skill, `okf-checks`, which tells your agent when to run each tool and how to
-act on what it reports. Install it in your project:
+If you also use [Pi](https://github.com/earendil-works/pi), this repository is a Pi package
+with one skill, `okf-checks`, which tells an agent when to run each tool and how to act on what
+it reports. Install it in your project:
 
 ```bash
 pi install --local git:github.com/pantelis/physical-ai-wiki

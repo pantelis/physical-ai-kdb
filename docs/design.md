@@ -105,6 +105,11 @@ matcher is available to agents as `paiw_tools.locate.find_quote(page, text)`, wh
 bbox of every occurrence on a pdfplumber page, so an agent and the checker agree on where a
 quote is.
 
+`paiw_tools.locate.find_quote_lines(page, text)` gives the same matches as one box per line, and
+`paiw_tools.annotate.highlight` writes them as a single highlight with one quad per line, so the
+highlight covers only the quoted words. Its rectangle is the union of the lines, which is what
+`ground.highlight` compares with the bbox.
+
 A quote that appears on the page but outside its bbox fails `ground.bbox`, not `ground.quote`,
 so the report says whether the text or the location is wrong.
 

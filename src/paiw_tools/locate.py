@@ -19,12 +19,8 @@ def norm(text: str) -> str:
     return "".join(QUOTES.get(c, DASHES.get(c, c)) for c in text if not c.isspace())
 
 
-def find_quote(page, text: str) -> list[list[float]]:
-    """Return the bbox of every occurrence of text on a pdfplumber page.
-
-    Each bbox is [x0, y0, x1, y1] in PDF points with the origin at the bottom left, the union
-    of the matched characters. The list is empty when the text is not on the page.
-    """
+def _matches(page, text: str) -> list[list[dict]]:
+    """The characters of every occurrence of text on the page, in drawing order."""
     target = norm(text)
     if not target:
         return []
@@ -38,14 +34,45 @@ def find_quote(page, text: str) -> list[list[float]]:
         flat.append(n)
         owner += [i] * len(n)
     stream = "".join(flat)
-    spans, at = [], stream.find(target)
+    out, at = [], stream.find(target)
     while at >= 0:
-        hit = [chars[j] for j in sorted(set(owner[at : at + len(target)]))]
-        top, bottom = min(c["top"] for c in hit), max(c["bottom"] for c in hit)
-        spans.append([round(min(c["x0"] for c in hit), 2), round(page.height - bottom, 2),
-                      round(max(c["x1"] for c in hit), 2), round(page.height - top, 2)])
+        out.append([chars[j] for j in sorted(set(owner[at : at + len(target)]))])
         at = stream.find(target, at + 1)
-    return spans
+    return out
+
+
+def _box(page, chars: list[dict]) -> list[float]:
+    top, bottom = min(c["top"] for c in chars), max(c["bottom"] for c in chars)
+    return [round(min(c["x0"] for c in chars), 2), round(page.height - bottom, 2),
+            round(max(c["x1"] for c in chars), 2), round(page.height - top, 2)]
+
+
+def find_quote(page, text: str) -> list[list[float]]:
+    """Return the bbox of every occurrence of text on a pdfplumber page.
+
+    Each bbox is [x0, y0, x1, y1] in PDF points with the origin at the bottom left, the union
+    of the matched characters. The list is empty when the text is not on the page.
+    """
+    return [_box(page, hit) for hit in _matches(page, text)]
+
+
+def find_quote_lines(page, text: str) -> list[list[list[float]]]:
+    """Like find_quote, but give each occurrence as one box per line of text, top line first.
+
+    A highlight drawn from these boxes covers only the quoted words, where one bbox for a
+    quote that starts or ends partway through a line also covers its neighbours.
+    """
+    out = []
+    for hit in _matches(page, text):
+        lines, current = [], [hit[0]]
+        for prev, ch in zip(hit, hit[1:]):
+            if ch["top"] > prev["bottom"] or ch["bottom"] < prev["top"] or ch["x0"] < prev["x0"] - 1:
+                lines.append(current)
+                current = []
+            current.append(ch)
+        lines.append(current)
+        out.append([_box(page, line) for line in lines])
+    return out
 
 
 def inside(span: list[float], bbox: list[float], slack: float = 2.0) -> bool:
