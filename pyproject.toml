@@ -14,6 +14,7 @@ dependencies = [
 okf-validate = "paiw_tools.validate:main"
 okf-ground = "paiw_tools.ground:main"
 okf-diff = "paiw_tools.diff:main"
+okf-seed = "paiw_tools.seed:main"
 
 [dependency-groups]
 dev = [

@@ -3,7 +3,7 @@
 Page text from an extractor reorders lines (two columns at the same height come out
 interleaved), so a sentence can be on the page and still be missing from its text. Matching
 the character stream avoids that. Spacing, ligatures, curly quotes, dashes and a hyphen that
-breaks a word across lines are ignored.
+breaks a word across lines are ignored; a hyphen that ends a line is tried both dropped and kept.
 """
 
 from __future__ import annotations
@@ -19,17 +19,23 @@ def norm(text: str) -> str:
     return "".join(QUOTES.get(c, DASHES.get(c, c)) for c in text if not c.isspace())
 
 
-def _matches(page, text: str) -> list[list[dict]]:
-    """The characters of every occurrence of text on the page, in drawing order."""
-    target = norm(text)
-    if not target:
-        return []
-    chars = page.chars
+def _reading_order(chars: list[dict]) -> list[dict]:
+    """Characters line by line, top to bottom, and left to right within a line."""
+    lines: list[list[dict]] = []
+    for ch in sorted(chars, key=lambda c: c["bottom"]):
+        if lines and abs(ch["bottom"] - lines[-1][0]["bottom"]) <= 2.5:
+            lines[-1].append(ch)
+        else:
+            lines.append([ch])
+    return [ch for line in lines for ch in sorted(line, key=lambda c: c["x0"])]
+
+
+def _find(chars: list[dict], target: str, drop_breaks: bool) -> list[list[dict]]:
     flat, owner = [], []
     for i, ch in enumerate(chars):
         n = norm(ch["text"])
         nxt = chars[i + 1] if i + 1 < len(chars) else None
-        if n == "-" and nxt is not None and nxt["top"] > ch["bottom"]:
+        if drop_breaks and n == "-" and nxt is not None and nxt["top"] > ch["bottom"]:
             continue  # a hyphen that breaks a word across lines
         flat.append(n)
         owner += [i] * len(n)
@@ -39,6 +45,30 @@ def _matches(page, text: str) -> list[list[dict]]:
         out.append([chars[j] for j in sorted(set(owner[at : at + len(target)]))])
         at = stream.find(target, at + 1)
     return out
+
+
+def _matches(page, text: str) -> list[list[dict]]:
+    """The characters of every occurrence of text on the page.
+
+    The PDF's drawing order comes first, because it keeps the columns of a two-column page apart.
+    When that finds nothing, reading order is tried, for text drawn out of order, such as small
+    capitals that a PDF draws after the rest of their line.
+    """
+    target = norm(text)
+    if not target:
+        return []
+    for order in (page.chars, _reading_order(page.chars)):
+        # A hyphen at the end of a line may split a word (manip-ulation) or belong to it
+        # (LIBERO-SPATIAL), so both readings are tried.
+        hits, seen = [], set()
+        for hit in _find(order, target, True) + _find(order, target, False):
+            key = tuple(id(c) for c in hit)
+            if key not in seen:
+                seen.add(key)
+                hits.append(hit)
+        if hits:
+            return hits
+    return []
 
 
 def _box(page, chars: list[dict]) -> list[float]:

@@ -18,7 +18,8 @@ from .report import Report, fail
 TOOL = "okf-validate"
 SENTENCE_KEYS = ("id", "resource", "page", "quote", "bbox")
 CELL_KEYS = ("id", "resource", "page", "table", "row", "column", "value", "bbox")
-RESULT_CONDITIONS = ("benchmark", "suite", "trials", "embodiment")
+RESULT_CONDITIONS = ("task", "benchmark", "suite", "trials", "embodiment")
+TERM_CONDITIONS = ("task", "benchmark", "suite", "embodiment", "perturbation")
 ABBREVIATIONS = ("et al.", "e.g.", "i.e.", "vs.", "Fig.", "Eq.", "Sec.", "Tab.", "approx.", "resp.")
 LINK = re.compile(r"\]\(([^)\s]+)")
 SENTENCE = re.compile(r".+?[.!?](?:\[\^[^\]\s]+\])*(?=\s|$)|.+$", re.DOTALL)
@@ -215,6 +216,14 @@ def check_concept(b: B.Bundle, page: B.Page, listed: set[Path], all_ids: set[str
         missing = [k for k in RESULT_CONDITIONS if not isinstance(cond, dict) or cond.get(k) in (None, "")]
         if missing:
             report.error("project.result", page.rel, f"a Result needs conditions with {', '.join(missing)}")
+        for key in TERM_CONDITIONS:
+            value = cond.get(key) if isinstance(cond, dict) else None
+            if value in (None, ""):
+                continue
+            target = term_at(b, page, value)
+            if target is None:
+                report.error("project.condition", page.rel,
+                             f"condition {key} is '{value}'; it must be the path of a Term page under /ontology/<domain>/")
 
     if fm.get("type") == "Attested Computation":
         if fm.get("runtime") != "python":
@@ -228,10 +237,82 @@ def check_concept(b: B.Bundle, page: B.Page, listed: set[Path], all_ids: set[str
             report.error("project.computation", page.rel, "no computation file and no python block under # Computation")
 
 
+def term_domain(rel: str) -> str | None:
+    """ontology/<domain>/... gives the domain; any other path gives None."""
+    parts = rel.split("/")
+    return parts[1] if len(parts) >= 3 and parts[0] == "ontology" else None
+
+
+def is_term(page: B.Page) -> bool:
+    return (page.frontmatter or {}).get("type") == "Term"
+
+
+def term_at(b: B.Bundle, page: B.Page, value) -> B.Page | None:
+    """The Term page a path-valued field points at, or None."""
+    if not isinstance(value, str):
+        return None
+    path = B.resolve(b.root, page.rel, value)
+    target = next((p for p in b.concepts if path is not None and p.path.resolve() == path), None)
+    return target if target is not None and is_term(target) and term_domain(target.rel) else None
+
+
+def check_terms(b: B.Bundle, report: Report) -> None:
+    terms = [p for p in b.concepts if is_term(p)]
+    broader: dict[str, list[str]] = {}
+    labels: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
+    for page in terms:
+        fm = page.frontmatter or {}
+        domain = term_domain(page.rel)
+        if domain is None:
+            report.error("project.term", page.rel, "a Term page lives under ontology/<domain>/, such as ontology/robotics/tasks/")
+            continue
+        if not isinstance(fm.get("pref_label"), str) or not fm["pref_label"].strip():
+            report.error("project.term", page.rel, "a Term needs pref_label")
+        alts = fm.get("alt_labels", [])
+        if not isinstance(alts, list) or not all(isinstance(a, str) for a in alts):
+            report.error("project.term", page.rel, "alt_labels is a list of strings")
+            alts = []
+        for name in [fm.get("pref_label")] + alts:
+            if isinstance(name, str) and normalize_name(name):
+                labels[(domain, normalize_name(name))].append((page.rel, name))
+        parents = fm.get("broader", [])
+        if not isinstance(parents, list):
+            report.error("project.term", page.rel, "broader is a list of Term paths")
+            parents = []
+        broader[page.rel] = []
+        for value in parents:
+            target = term_at(b, page, value)
+            if target is None:
+                report.error("project.term", page.rel, f"broader '{value}' is not a Term page")
+            elif term_domain(target.rel) != domain:
+                report.error("project.term", page.rel, f"broader '{value}' is in the {term_domain(target.rel)} domain, not {domain}")
+            else:
+                broader[page.rel].append(target.rel)
+    for start in broader:
+        seen, stack = set(), list(broader[start])
+        while stack:
+            node = stack.pop()
+            if node == start:
+                report.error("project.term", start, "broader terms form a cycle back to this term")
+                break
+            if node not in seen:
+                seen.add(node)
+                stack.extend(broader.get(node, []))
+    for (domain, _), entries in sorted(labels.items()):
+        pages = sorted({rel for rel, _ in entries})
+        if len(pages) > 1:
+            names = ", ".join(sorted({name for _, name in entries}))
+            for rel in pages:
+                others = ", ".join(p for p in pages if p != rel)
+                report.error("project.term-label", rel, f"in the {domain} domain the label {names} also names {others}")
+
+
 def check_entities(b: B.Bundle, report: Report) -> None:
     owners: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for page in b.concepts:
         fm = page.frontmatter or {}
+        if is_term(page):
+            continue  # terms are checked per domain by check_terms
         names = [fm.get("title")] + (fm.get("aliases") if isinstance(fm.get("aliases"), list) else [])
         for name in names:
             if isinstance(name, str) and normalize_name(name):
@@ -254,6 +335,7 @@ def validate(root: Path) -> Report:
     for page in b.concepts:
         check_concept(b, page, listed, all_ids, report)
     check_entities(b, report)
+    check_terms(b, report)
     report.extra["pages"] = len(b.concepts)
     return report
 

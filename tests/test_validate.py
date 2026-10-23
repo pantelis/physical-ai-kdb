@@ -177,14 +177,94 @@ def test_contested_by_maps_a_local_source_to_sources_in_the_bundle(bundle):
     assert "project.contested" in errors(validate(bundle.root))
 
 
-def test_a_result_states_its_conditions(bundle):
-    conditions = {"benchmark": "LIBERO", "suite": "LIBERO-Long", "trials": 500, "embodiment": "Franka"}
-    bundle.add("results/openvla-libero.md", concept(type="Result", title="OpenVLA on LIBERO", conditions=conditions))
+def term(label, domain="robotics", kind="tasks", **extra):
+    fm = concept(type="Term", title=label, pref_label=label)
+    fm.update(extra)
+    return f"ontology/{domain}/{kind}/{label.lower().replace(' ', '-')}.md", fm
+
+
+def add_terms(bundle):
+    for label, kind in [("Pick and place", "tasks"), ("LIBERO", "benchmarks"), ("LIBERO-Long", "benchmarks"),
+                        ("Franka Panda", "embodiments")]:
+        rel, fm = term(label, kind=kind)
+        bundle.add(rel, fm)
+
+
+CONDITIONS = {
+    "task": "/ontology/robotics/tasks/pick-and-place.md",
+    "benchmark": "/ontology/robotics/benchmarks/libero.md",
+    "suite": "/ontology/robotics/benchmarks/libero-long.md",
+    "embodiment": "/ontology/robotics/embodiments/franka-panda.md",
+    "trials": 500,
+}
+
+
+def test_a_result_states_its_conditions_as_ontology_terms(bundle):
+    add_terms(bundle)
+    bundle.add("results/openvla-libero.md", concept(type="Result", title="OpenVLA on LIBERO", conditions=CONDITIONS))
     assert errors(validate(bundle.root)) == []
-    partial = {k: v for k, v in conditions.items() if k != "trials"}
+    partial = {k: v for k, v in CONDITIONS.items() if k != "trials"}
     bundle.add("results/openvla-libero.md", concept(type="Result", title="OpenVLA on LIBERO", conditions=partial))
     found = [f for f in validate(bundle.root).findings if f.rule == "project.result"]
     assert found and "trials" in found[0].message
+
+
+def test_a_condition_given_as_a_word_instead_of_a_term_fails(bundle):
+    add_terms(bundle)
+    bundle.add("results/openvla-libero.md", concept(type="Result", title="OpenVLA on LIBERO",
+                                                    conditions=dict(CONDITIONS, task="pick and place")))
+    found = [f for f in validate(bundle.root).findings if f.rule == "project.condition"]
+    assert found and "task" in found[0].message
+
+
+def test_a_condition_must_point_at_a_term_page(bundle):
+    add_terms(bundle)
+    bundle.add("models/openvla.md", concept())
+    for value in ["/ontology/robotics/tasks/missing.md", "/models/openvla.md"]:
+        bundle.add("results/openvla-libero.md", concept(type="Result", title="OpenVLA on LIBERO",
+                                                        conditions=dict(CONDITIONS, task=value)))
+        assert "project.condition" in errors(validate(bundle.root)), value
+
+
+def test_a_term_lives_under_ontology_domain_and_has_a_pref_label(bundle):
+    rel, fm = term("Stacking")
+    bundle.add(rel, fm)
+    assert errors(validate(bundle.root)) == []
+    bundle.add("tasks/stacking.md", dict(fm, title="Stacking outside the ontology", pref_label="Stacking 2"))
+    assert "project.term" in errors(validate(bundle.root))
+    (bundle.root / "tasks/stacking.md").unlink()
+    bundle._pages = [p for p in bundle._pages if p[1] != "tasks/stacking.md"]
+    bundle.reindex()
+    no_label = dict(fm)
+    del no_label["pref_label"]
+    bundle.add(rel, no_label)
+    assert "project.term" in errors(validate(bundle.root))
+
+
+def test_broader_points_at_terms_in_the_same_domain_without_cycles(bundle):
+    parent_rel, parent = term("Manipulation")
+    child_rel, child = term("Pick and place", broader=["/" + parent_rel])
+    bundle.add(parent_rel, parent)
+    bundle.add(child_rel, child)
+    assert errors(validate(bundle.root)) == []
+    bundle.add(parent_rel, dict(parent, broader=["/" + child_rel]))
+    assert "project.term" in errors(validate(bundle.root))
+    farm_rel, farm = term("Harvesting", domain="agriculture")
+    bundle.add(farm_rel, farm)
+    bundle.add(parent_rel, parent)
+    bundle.add(child_rel, dict(child, broader=["/" + farm_rel]))
+    assert "project.term" in errors(validate(bundle.root))
+
+
+def test_the_same_label_may_name_terms_in_two_domains_but_not_two_in_one(bundle):
+    robot_rel, robot = term("Pick and place")
+    farm_rel, farm = term("Pick and place", domain="agriculture")
+    bundle.add(robot_rel, robot)
+    bundle.add(farm_rel, farm)
+    assert errors(validate(bundle.root)) == []
+    other_rel, other = term("PnP", alt_labels=["pick-and-place"])
+    bundle.add(other_rel, other)
+    assert "project.term-label" in errors(validate(bundle.root))
 
 
 def test_an_attested_computation_runs_python(bundle):

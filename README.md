@@ -13,8 +13,9 @@ grading time, so a clean run here means the mechanical checks will pass.
 | `okf-validate` | the bundle is valid OKF v0.2 and follows the project rules: sources, citations, index, log and one page per entity |
 | `okf-ground` | every quoted sentence is on its cited page and inside its bbox, every table value is inside its bbox, and every bbox matches a highlight in your annotated PDF |
 | `okf-diff` | which pages changed between two versions of the wiki, and whether pages the new paper did not touch stayed byte-identical |
+| `okf-seed` | writes the course's seed ontology into the wiki: one `Term` page per term, each defined by a quote it finds and highlights in your copy of a library paper |
 
-The tools only read your bundle. They never call a model and never change a file.
+`okf-validate`, `okf-ground` and `okf-diff` only read your bundle. `okf-seed` writes the ontology pages, their highlights and one log entry. None of the tools calls a model.
 
 ## Install
 
@@ -27,6 +28,7 @@ uv tool install git+https://github.com/pantelis/physical-ai-wiki
 ## Run
 
 ```bash
+okf-seed wiki          # once, before the first ingest; needs papers/<arxiv-id>.pdf
 okf-validate wiki
 okf-ground wiki
 okf-diff wiki --git submission-1 HEAD

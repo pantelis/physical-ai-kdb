@@ -1,0 +1,285 @@
+# Seed ontology for the robotics domain of the Physical AI Wiki.
+#
+# okf-seed writes one Term page per entry into ontology/robotics/<kind>/<slug>.md. Each scope
+# sentence cites a quote from a library paper; okf-seed finds the quote in the bundle's copy of the
+# paper (papers/<arxiv-id>.pdf), records its page and bbox, and highlights it. Quotes are copied
+# word for word from the paper; `page` is where to look first.
+#
+# close_match and related_match hold identifiers verified in the source vocabulary (SKOS
+# skos:closeMatch and skos:relatedMatch). Leave them out rather than guess. Use close_match, not
+# exact_match, by default: skos:exactMatch is transitive. SOMA (github.com/ease-crc/soma) is the only
+# vocabulary checked that has manipulation task classes; none covers benchmarks, suites or
+# perturbation types, so those terms rest on paper citations alone.
+
+domain: robotics
+papers:
+  bridge: '2308.12952'      # BridgeData V2
+  calvin: '2112.03227'      # CALVIN
+  libero: '2306.03310'      # LIBERO
+  libero-plus: '2510.13626' # LIBERO-Plus
+  oft: '2502.19645'         # OpenVLA-OFT
+  simpler: '2405.05941'     # SIMPLER
+
+terms:
+  # ---- tasks ----
+  - slug: manipulation
+    kind: tasks
+    pref_label: Robot manipulation
+    alt_labels: [manipulation, manipulation skill]
+    scope:
+      - text: Robot manipulation skills include pick-and-place, pushing, sweeping, stacking and folding.
+        quote: {paper: bridge, page: 1, text: "The dataset includes skills such as pick-and-place, pushing, sweeping, stacking, folding, and more."}
+
+  - slug: pick-and-place
+    kind: tasks
+    pref_label: Pick and place
+    related_match: ["http://www.ease-crc.org/ont/SOMA.owl#PickingUp", "http://www.ease-crc.org/ont/SOMA.owl#Placing", "http://www.ease-crc.org/ont/SOMA.owl#Transporting"]
+    alt_labels: [pick-and-place, pick-place, PnP, pick up and place]
+    broader: [manipulation]
+    scope:
+      - text: Pick-and-place is counted as one skill, because it is usually done in one motion.
+        quote: {paper: bridge, page: 3, text: "We count pick-and-place as one skill since it is typically performed in one motion."}
+      - text: Every task in the LIBERO-Object suite is a pick-and-place task.
+        quote: {paper: libero, page: 5, text: "All tasks in LIBERO-OBJECT request the robot to pick-place a unique object."}
+
+  - slug: pushing
+    kind: tasks
+    pref_label: Pushing
+    close_match: ["http://www.ease-crc.org/ont/SOMA.owl#Pushing"]
+    alt_labels: [push]
+    broader: [manipulation]
+    scope:
+      - text: Pushing is one of the manipulation skills in the BridgeData V2 dataset.
+        quote: {paper: bridge, page: 1, text: "The dataset includes skills such as pick-and-place, pushing, sweeping, stacking, folding, and more."}
+
+  - slug: sweeping
+    kind: tasks
+    pref_label: Sweeping
+    alt_labels: [sweep]
+    broader: [manipulation]
+    scope:
+      - text: Sweeping is one of the manipulation skills in the BridgeData V2 dataset.
+        quote: {paper: bridge, page: 1, text: "The dataset includes skills such as pick-and-place, pushing, sweeping, stacking, folding, and more."}
+
+  - slug: stacking
+    kind: tasks
+    pref_label: Stacking
+    alt_labels: [stack, block stacking]
+    broader: [manipulation]
+    scope:
+      - text: Stacking is one of the manipulation skills in the BridgeData V2 dataset.
+        quote: {paper: bridge, page: 1, text: "The dataset includes skills such as pick-and-place, pushing, sweeping, stacking, folding, and more."}
+
+  - slug: folding
+    kind: tasks
+    pref_label: Folding
+    alt_labels: [cloth folding, fold]
+    broader: [manipulation]
+    scope:
+      - text: Folding is one of the manipulation skills in the BridgeData V2 dataset.
+        quote: {paper: bridge, page: 1, text: "The dataset includes skills such as pick-and-place, pushing, sweeping, stacking, folding, and more."}
+
+  - slug: articulated-object-manipulation
+    kind: tasks
+    pref_label: Articulated object manipulation
+    related_match: ["http://www.ease-crc.org/ont/SOMA.owl#Opening", "http://www.ease-crc.org/ont/SOMA.owl#Closing"]
+    alt_labels: [opening a drawer, closing a drawer, open drawer, close drawer, drawer opening]
+    broader: [manipulation]
+    scope:
+      - text: Opening and closing the drawer of the CALVIN desk is an example of articulated object manipulation.
+        quote: {paper: calvin, page: 2, text: "The environments contain a 7-DOF Franka Emika Panda robot arm with a parallel gripper and a desk with a sliding door and a drawer that can be opened and closed."}
+      - text: Opening and closing a drawer count as one skill because one is the reverse of the other.
+        quote: {paper: bridge, page: 3, text: "We also count motions that are the reverse of each other (e.g. opening and closing a drawer) as a single skill."}
+
+  - slug: long-horizon-manipulation
+    kind: tasks
+    pref_label: Long-horizon manipulation
+    alt_labels: [long-horizon task, multi-step manipulation, long-horizon]
+    broader: [manipulation]
+    scope:
+      - text: CALVIN was built to evaluate language-conditioned policies on long-horizon tasks.
+        quote: {paper: calvin, page: 2, text: "The aim of the CALVIN benchmark is to evaluate the learning of long-horizon language-conditioned continuous control policies."}
+
+  # ---- benchmarks and suites ----
+  - slug: libero
+    kind: benchmarks
+    pref_label: LIBERO
+    alt_labels: [LIBERO benchmark]
+    scope:
+      - text: LIBERO is organized as four task suites.
+        quote: {paper: libero, page: 5, text: "LIBERO has four task suites: LIBERO-SPATIAL, LIBERO-OBJECT, LIBERO-GOAL, and LIBERO-100."}
+
+  - slug: libero-spatial
+    kind: benchmarks
+    pref_label: LIBERO-Spatial
+    alt_labels: [LIBERO-SPATIAL, Spatial]
+    broader: [libero]
+    scope:
+      - text: Every LIBERO-Spatial task asks the robot to place a bowl on a plate.
+        quote: {paper: libero, page: 5, text: "Specifically, all tasks in LIBERO-SPATIAL request the robot to place a bowl, among the same set of objects, on a plate."}
+
+  - slug: libero-object
+    kind: benchmarks
+    pref_label: LIBERO-Object
+    alt_labels: [LIBERO-OBJECT, Object]
+    broader: [libero]
+    scope:
+      - text: Every LIBERO-Object task asks the robot to pick and place a different object.
+        quote: {paper: libero, page: 5, text: "All tasks in LIBERO-OBJECT request the robot to pick-place a unique object."}
+
+  - slug: libero-goal
+    kind: benchmarks
+    pref_label: LIBERO-Goal
+    alt_labels: [LIBERO-GOAL, Goal]
+    broader: [libero]
+    scope:
+      - text: LIBERO-Goal tasks share the same objects and layout and differ only in the goal.
+        quote: {paper: libero, page: 5, text: "All tasks in LIBERO-GOAL share the same objects with fixed spatial relationships but differ only in the task goal."}
+
+  - slug: libero-long
+    kind: benchmarks
+    pref_label: LIBERO-Long
+    alt_labels: [LIBERO-LONG, LIBERO-10, Long]
+    broader: [libero]
+    scope:
+      - text: LIBERO-Long holds the 10 long-horizon tasks of LIBERO-100, and LIBERO-90 holds the other 90 short-horizon tasks.
+        quote: {paper: libero, page: 5, text: "In this paper, we split LIBERO-100 into 90 short-horizon tasks (LIBERO-90) and 10 long-horizon tasks (LIBERO-LONG)."}
+
+  - slug: libero-90
+    kind: benchmarks
+    pref_label: LIBERO-90
+    alt_labels: []
+    broader: [libero]
+    scope:
+      - text: LIBERO-90 holds the 90 short-horizon tasks of LIBERO-100.
+        quote: {paper: libero, page: 5, text: "In this paper, we split LIBERO-100 into 90 short-horizon tasks (LIBERO-90) and 10 long-horizon tasks (LIBERO-LONG)."}
+
+  - slug: libero-plus
+    kind: benchmarks
+    pref_label: LIBERO-Plus
+    alt_labels: [LIBERO Plus]
+    broader: [libero]
+    scope:
+      - text: LIBERO-Plus introduces controlled perturbations along seven dimensions.
+        quote: {paper: libero-plus, page: 1, text: "We perform a systematic vulnerability analysis by introducing controlled perturbations across seven dimensions"}
+
+  - slug: calvin
+    kind: benchmarks
+    pref_label: CALVIN
+    alt_labels: [CALVIN benchmark]
+    scope:
+      - text: CALVIN has four related environments, labelled A to D, for general play and for evaluating specific tasks.
+        quote: {paper: calvin, page: 2, text: "CALVIN features four different, yet structurally related environments (A, B, C, D) so that it can be used for general playing as well as evaluating specific tasks."}
+
+  - slug: simpler
+    kind: benchmarks
+    pref_label: SIMPLER
+    alt_labels: [SimplerEnv, SIMPLER-Env]
+    scope:
+      - text: SIMPLER is a set of simulated environments that reproduce two real evaluation setups, the Google Robot and the WidowX BridgeV2 setup.
+        quote: {paper: simpler, page: 3, text: "a suite of simulated evaluation environments for commonly used real robot evaluation setups: the Google Robot from the RT series of works [6, 5, 11] and the WidowX BridgeV2 setup [66]."}
+
+  # ---- embodiments ----
+  - slug: franka-panda
+    kind: embodiments
+    pref_label: Franka Emika Panda
+    alt_labels: [Franka, Panda, Franka Panda]
+    scope:
+      - text: The Franka Emika Panda is a 7-DOF robot arm, used with a parallel gripper in CALVIN.
+        quote: {paper: calvin, page: 2, text: "The environments contain a 7-DOF Franka Emika Panda robot arm with a parallel gripper and a desk with a sliding door and a drawer that can be opened and closed."}
+
+  - slug: widowx-250
+    kind: embodiments
+    pref_label: WidowX 250
+    alt_labels: [WidowX, WidowX-250]
+    scope:
+      - text: The WidowX 250 is the robot arm used to collect BridgeData V2.
+        quote: {paper: bridge, page: 4, text: "A picture of our robot setup showing the WidowX 250 robot arm and various cameras."}
+
+  - slug: google-robot
+    kind: embodiments
+    pref_label: Google Robot
+    alt_labels: [RT-1 robot, Everyday Robots]
+    scope:
+      - text: The Google Robot is the robot of the RT series of works, and SIMPLER simulates its evaluation setup.
+        quote: {paper: simpler, page: 3, text: "the Google Robot from the RT series of works [6, 5, 11]"}
+
+  - slug: aloha
+    kind: embodiments
+    pref_label: ALOHA
+    alt_labels: [bimanual ALOHA]
+    scope:
+      - text: ALOHA is a bimanual robot, on which OpenVLA-OFT+ is demonstrated.
+        quote: {paper: oft, page: 2, text: "OpenVLA-OFT+ on the bimanual ALOHA robot."}
+
+  # ---- perturbations (LIBERO-Plus, Section 2.1) ----
+  - slug: perturbation
+    kind: perturbations
+    pref_label: Perturbation
+    alt_labels: [single-dimension perturbation]
+    scope:
+      - text: LIBERO-Plus applies single-dimension perturbations to evaluation episodes.
+        quote: {paper: libero-plus, page: 2, text: "study seven common single-dimension perturbations applied to the evaluation episodes"}
+
+  - slug: object-layout
+    kind: perturbations
+    pref_label: Object layout
+    alt_labels: [Objects Layout, Layout, layout perturbation]
+    broader: [perturbation]
+    scope:
+      - text: An object layout perturbation adds confounding objects or moves the target object.
+        quote: {paper: libero-plus, page: 2, text: "Objects Layout: add confounding objects and/or shift the target object’s position."}
+
+  - slug: camera-viewpoint
+    kind: perturbations
+    pref_label: Camera viewpoint
+    alt_labels: [Camera Viewpoints, Camera, camera perturbation]
+    broader: [perturbation]
+    scope:
+      - text: A camera viewpoint perturbation changes the pose and field of view of the third-person camera.
+        quote: {paper: libero-plus, page: 2, text: "Camera Viewpoints: change the viewpoint/pose and field-of-view of the third-person camera."}
+
+  - slug: robot-initial-state
+    kind: perturbations
+    pref_label: Robot initial state
+    alt_labels: [Robot Initial States, Robot, initial state perturbation]
+    broader: [perturbation]
+    scope:
+      - text: A robot initial state perturbation starts the arm from a different pose.
+        quote: {paper: libero-plus, page: 2, text: "Robot Initial States: change the manipulator’s initial pose."}
+
+  - slug: language-instruction
+    kind: perturbations
+    pref_label: Language instruction
+    alt_labels: [Language Instructions, Language, instruction perturbation]
+    broader: [perturbation]
+    scope:
+      - text: A language instruction perturbation rewrites the task instruction to make it richer and more complex.
+        quote: {paper: libero-plus, page: 2, text: "Language Instructions: rewrite task instructions to increase linguistic richness and complexity."}
+
+  - slug: light-conditions
+    kind: perturbations
+    pref_label: Light conditions
+    alt_labels: [Light Conditions, Light, lighting, illumination]
+    broader: [perturbation]
+    scope:
+      - text: A light condition perturbation varies the intensity, direction and color of the lighting and its shadows.
+        quote: {paper: libero-plus, page: 2, text: "Light Conditions: vary illumination intensity, direction, color, and shadow patterns."}
+
+  - slug: background-texture
+    kind: perturbations
+    pref_label: Background texture
+    alt_labels: [Background Textures, Background, background perturbation]
+    broader: [perturbation]
+    scope:
+      - text: A background texture perturbation changes the textures and materials of the table and scene.
+        quote: {paper: libero-plus, page: 2, text: "Background Textures: modify table/scene textures and materials."}
+
+  - slug: sensor-noise
+    kind: perturbations
+    pref_label: Sensor noise
+    alt_labels: [Noise, image noise]
+    broader: [perturbation]
+    scope:
+      - text: A sensor noise perturbation adds photometric distortions, such as jitter or Gaussian blur, to the input images.
+        quote: {paper: libero-plus, page: 2, text: "Sensor Noise: inject photometric distortions (e.g., jitter, Gaussian blur) into input images."}

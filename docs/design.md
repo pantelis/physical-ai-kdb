@@ -78,10 +78,32 @@ Checks the bundle's structure without opening any PDF.
 | `project.unused-source` | warning | every source is cited at least once |
 | `project.uncited` | warning | every sentence of prose carries at least one citation |
 | `project.aliases` | error | `aliases` is a list of strings |
-| `project.entity` | error | no two pages share a title or alias after normalization |
+| `project.entity` | error | no two pages share a title or alias after normalization; Term pages are checked by `project.term-label` instead |
 | `project.contested` | error | `contested_by` maps a source id on the page to a list of source ids that exist in the bundle |
-| `project.result` | error | a `Result` page has `conditions` with `benchmark`, `suite`, `trials` and `embodiment` |
+| `project.result` | error | a `Result` page has `conditions` with `task`, `benchmark`, `suite`, `trials` and `embodiment` |
+| `project.condition` | error | each of `task`, `benchmark`, `suite`, `embodiment` and, when present, `perturbation` is the path of a Term page under `/ontology/<domain>/` |
+| `project.term` | error | a `Term` page lives under `ontology/<domain>/`, has `pref_label`, lists `alt_labels` as strings, and its `broader` entries are Term paths in the same domain with no cycle |
+| `project.term-label` | error | within one domain, no two Terms share a preferred or alternative label after normalization; the same label may name Terms in two domains |
 | `project.computation` | error | an `Attested Computation` page has `runtime: python` and either a `computation` file that exists or a `# Computation` python block |
+
+## The ontology
+
+Conditions name ontology terms, not words, because the same words mean different things in
+different domains: pick-and-place on a robot arm is not pick-and-place in a packing shed. Each
+term is one page under `ontology/<domain>/`, with fields modelled on W3C SKOS: `pref_label`,
+`alt_labels`, `broader`, and optional `exact_match` links to established vocabularies. Its body
+is a scope note, cited like any other prose. A term's domain is the directory after `ontology/`,
+so labels are unique within a domain and may repeat across domains.
+
+The seed ontology ships as `src/paiw_tools/seeds/robotics.yaml`. Each term lists its labels,
+its `broader` terms, any verified `close_match` or `related_match` identifiers, and one or more
+scope sentences, each with the exact quote from a library paper that supports it. `okf-seed`
+finds every quote in the bundle's own `papers/<arxiv-id>.pdf`, starting with the page the spec
+names, so the bbox matches the copy of the paper the student has. A term whose quote is not
+found is reported as `seed.quote` and not written. Running `okf-seed` again rewrites only pages
+whose content changed, so it never breaks the byte-identical rule. Write arXiv ids in the spec
+in quotes: YAML reads `2306.03310` as a number and drops the trailing zero, which `okf-seed`
+reports as `seed.spec`.
 
 Name normalization for `project.entity` lowercases the name, writes π as `pi`, and drops every
 character that is not a letter or digit. So `OpenVLA-OFT` and `openvla oft` collide, while

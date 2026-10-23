@@ -92,3 +92,31 @@ def test_the_line_boxes_span_the_same_area_as_the_quote_bbox(midline):
     [lines] = find_quote_lines(p, "The quote starts here and ends.")
     union = [min(b[0] for b in lines), min(b[1] for b in lines), max(b[2] for b in lines), max(b[3] for b in lines)]
     assert union == span
+
+
+def test_a_word_whose_tail_is_drawn_later_is_found_in_reading_order(tmp_path):
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    from reportlab.pdfgen import canvas
+
+    pdf = tmp_path / "smallcaps.pdf"
+    c = canvas.Canvas(str(pdf), pagesize=(612, 792))
+    c.setFont("Helvetica", 12)
+    head = "All tasks in LIBERO-S"
+    c.drawString(72, 700, head)
+    tail_x = 72 + stringWidth(head, "Helvetica", 12)
+    rest_x = tail_x + stringWidth("PATIAL", "Helvetica", 9)
+    c.drawString(rest_x, 700, " place a bowl on a plate.")
+    c.setFont("Helvetica", 9)
+    c.drawString(tail_x, 700, "PATIAL")  # small caps drawn last, as some PDFs do
+    c.showPage()
+    c.save()
+    with pdfplumber.open(pdf) as doc:
+        assert len(find_quote(doc.pages[0], "All tasks in LIBERO-SPATIAL place a bowl on a plate.")) == 1
+
+
+def test_a_real_hyphen_at_a_line_break_is_kept(tmp_path):
+    pdf = tmp_path / "name.pdf"
+    make_pdf(pdf, [[(72, 700, "all tasks in LIBERO-"), (72, 686, "SPATIAL request a bowl.")]])
+    with pdfplumber.open(pdf) as doc:
+        assert len(find_quote(doc.pages[0], "all tasks in LIBERO-SPATIAL request a bowl.")) == 1
+        assert len(find_quote(doc.pages[0], "all tasks in LIBEROSPATIAL request a bowl.")) == 1  # both readings
