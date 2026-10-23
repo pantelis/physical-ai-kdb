@@ -90,6 +90,9 @@ def check_index_files(b: B.Bundle, report: Report) -> None:
         report.error("project.index", "index.md", "the bundle root has no index.md")
     if not (b.root / "log.md").is_file():
         report.error("project.log", "log.md", "the bundle root has no log.md")
+    for page in b.logs:
+        if page.rel == "log.md" and not re.search(r"^##\s+\S", page.text, re.MULTILINE):
+            report.error("project.log", page.rel, "log.md has no '## YYYY-MM-DD' date headings; put each entry under the date it was made")
 
 
 def listed_pages(b: B.Bundle) -> set[Path]:
@@ -102,6 +105,17 @@ def listed_pages(b: B.Bundle) -> set[Path]:
                 if path is not None:
                     listed.add(path)
     return listed
+
+
+def missing_resource(b: B.Bundle, page: B.Page, resource: str, path: Path) -> str:
+    try:
+        where = path.relative_to(b.root.resolve()).as_posix()
+    except ValueError:
+        where = str(path)
+    msg = f"resource '{resource}' does not exist in the bundle (looked for {where})"
+    if not resource.startswith("/") and (b.root / resource).is_file():
+        msg += f"; a path without a leading / is relative to this page, so write '/{resource}'"
+    return msg
 
 
 def check_source(b: B.Bundle, page: B.Page, source, seen: set, report: Report) -> None:
@@ -137,7 +151,7 @@ def check_source(b: B.Bundle, page: B.Page, source, seen: set, report: Report) -
     if isinstance(resource, str):
         path = B.resolve(b.root, page.rel, resource)
         if path is not None and not path.is_file():
-            report.error("project.source", page.rel, f"resource '{resource}' does not exist in the bundle", label)
+            report.error("project.source", page.rel, missing_resource(b, page, resource, path), label)
     elif "resource" in source:
         report.error("project.source", page.rel, "resource is a path", label)
 

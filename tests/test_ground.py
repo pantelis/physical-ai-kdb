@@ -3,7 +3,7 @@ import json
 import pytest
 from conftest import GOOD_CELL, GOOD_SOURCE, concept, highlight, make_pdf
 
-from paiw_tools.ground import ground, main, normalize
+from paiw_tools.ground import ground, main
 
 QUOTE = GOOD_SOURCE["quote"]
 CELL = "76.5"
@@ -53,6 +53,37 @@ def test_a_quote_on_the_page_but_outside_its_bbox_fails_only_the_bbox_check(bund
     assert found(ground(bundle.root)) == ["ground.bbox"]
 
 
+def test_a_bbox_measured_from_the_top_says_so(bundle, paper):
+    pdf, boxes = paper
+    x0, y0, x1, y1 = boxes[QUOTE]
+    flipped = [x0, 792 - y1, x1, 792 - y0]
+    annotate(bundle, pdf, [(1, flipped)])
+    bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, bbox=flipped)]))
+    [msg] = [f.message for f in ground(bundle.root).findings if f.rule == "ground.bbox"]
+    assert "from the top" in msg
+    assert str([round(v, 1) for v in boxes[QUOTE]]) in msg
+
+
+def test_a_quote_in_one_column_grounds_when_page_text_interleaves_columns(bundle):
+    pdf = bundle.root / "papers" / "kim2024.pdf"
+    left = [(72, 700, "OpenVLA is trained on"), (72, 686, "970k robot episodes.")]
+    right = [(320, 700, "Unrelated right column"), (320, 686, "text at the same height")]
+    boxes = make_pdf(pdf, [left + right])
+    bbox = [72, boxes["970k robot episodes."][1], 300, boxes["OpenVLA is trained on"][3]]
+    annotate(bundle, pdf, [(1, bbox)])
+    bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, bbox=bbox)]))
+    assert found(ground(bundle.root)) == []
+
+
+def test_a_bbox_elsewhere_on_the_page_is_told_where_the_quote_is(bundle, paper):
+    pdf, boxes = paper
+    wrong = boxes["Another sentence entirely."]
+    annotate(bundle, pdf, [(1, wrong)])
+    bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, bbox=wrong)]))
+    [msg] = [f.message for f in ground(bundle.root).findings if f.rule == "ground.bbox"]
+    assert "the quote is at [72.0, " in msg
+
+
 def test_a_page_beyond_the_end_of_the_paper_fails(bundle, paper):
     pdf, boxes = paper
     bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, page=9, bbox=boxes[QUOTE])]))
@@ -95,10 +126,6 @@ def test_a_highlight_that_roughly_covers_the_bbox_counts(bundle, paper):
     annotate(bundle, pdf, [(1, [x0 - 2, y0 - 1, x1 + 3, y1 + 1])])
     bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, bbox=boxes[QUOTE])]))
     assert found(ground(bundle.root)) == []
-
-
-def test_normalization_undoes_ligatures_quotes_dashes_and_line_break_hyphens():
-    assert normalize("ﬁne-tuned “policy” – rob-\not") == normalize('fine-tuned "policy" - robot')
 
 
 def test_sources_that_are_not_pdfs_in_the_bundle_are_skipped_with_a_warning(bundle, paper):

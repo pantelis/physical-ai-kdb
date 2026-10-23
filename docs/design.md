@@ -39,6 +39,11 @@ corner of the page and y grows upward. This is the space that PDF annotation rec
 so a highlight written by PdfCraft or pypdf can be compared with a bbox directly. Pages are
 numbered from 1.
 
+pdfplumber, PyMuPDF and most text extractors report `top` and `bottom` measured down from the
+top of the page. Convert them with `y0 = height - bottom` and `y1 = height - top`. When a bbox
+misses its text but the same box flipped top to bottom contains it, `okf-ground` says so and
+prints the corrected bbox.
+
 ## Sources
 
 A source is either a sentence or a table cell.
@@ -65,9 +70,9 @@ Checks the bundle's structure without opening any PDF.
 | `okf.index` | error | an `index.md` has no frontmatter, except `okf_version` at the bundle root |
 | `okf.log` | error | every `##` heading in a `log.md` is an ISO date, `YYYY-MM-DD` |
 | `project.index` | error | the bundle root has `index.md`, and every concept page is linked from an `index.md` |
-| `project.log` | error | the bundle root has `log.md` |
+| `project.log` | error | the bundle root has `log.md`, and it has at least one `## YYYY-MM-DD` heading |
 | `project.generated` | error | every concept has `generated.by` and an ISO 8601 `generated.at` |
-| `project.source` | error | every source is a well-formed sentence or table cell, with a unique `id` on its page and a `resource` that exists |
+| `project.source` | error | every source is a well-formed sentence or table cell, with a unique `id` on its page and a `resource` that exists. The error names the path it looked for, and when a path without a leading `/` would exist from the bundle root it suggests the `/` form |
 | `project.citation` | error | every footnote label in the body is the `id` of a source on the same page |
 | `project.footnote` | warning | every cited footnote label has a footnote definition |
 | `project.unused-source` | warning | every source is cited at least once |
@@ -89,9 +94,16 @@ Opens the PDFs and checks every source against them.
 | Rule | Level | Check |
 |---|---|---|
 | `ground.page` | error | the page exists in the PDF |
-| `ground.quote` | error | the quote appears on the page, after normalizing whitespace, ligatures, quotes, dashes and line-break hyphens |
-| `ground.bbox` | error | the text inside the bbox contains the quote, or the table-cell value |
+| `ground.quote` | error | the quote appears in the page's characters, in content-stream order, after normalizing whitespace, ligatures, quotes, dashes and line-break hyphens |
+| `ground.bbox` | error | at least one occurrence of the quote, or of the table-cell value, lies inside the bbox, with 2 points of slack on each side. The error gives the position of the text, and says so when the bbox looks measured from the top of the page |
 | `ground.highlight` | error | the annotated copy has a highlight on that page whose rectangle overlaps the bbox with intersection over union of at least 0.5 |
+
+Quotes are matched against the page's characters in the order the PDF draws them, not against
+extracted page text. Extractors reorder lines: two columns at the same height come out
+interleaved, so a sentence can be on the page and still be missing from its text. The same
+matcher is available to agents as `paiw_tools.locate.find_quote(page, text)`, which returns the
+bbox of every occurrence on a pdfplumber page, so an agent and the checker agree on where a
+quote is.
 
 A quote that appears on the page but outside its bbox fails `ground.bbox`, not `ground.quote`,
 so the report says whether the text or the location is wrong.

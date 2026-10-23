@@ -101,6 +101,18 @@ def test_a_source_resource_must_exist_in_the_bundle(bundle):
     assert "project.source" in errors(validate(bundle.root))
 
 
+def test_a_relative_resource_names_where_it_was_looked_for_and_the_root_path(bundle):
+    bundle.add("models/openvla.md", concept(sources=[dict(GOOD_SOURCE, resource="papers/kim2024.pdf")]))
+    [msg] = [f.message for f in validate(bundle.root).findings if f.rule == "project.source"]
+    assert "models/papers/kim2024.pdf" in msg
+    assert "/papers/kim2024.pdf" in msg.replace("models/papers", "")
+
+
+def test_a_log_without_date_headings_fails(bundle):
+    bundle.write("log.md", "# Update log\n\n- 2026-11-02: Built the wiki.\n")
+    assert "project.log" in errors(validate(bundle.root))
+
+
 def test_every_citation_resolves_to_a_source_on_the_page(bundle):
     body = "OpenVLA is trained on robot episodes.[^nobody2024]\n\n[^nobody2024]: Nobody\n"
     bundle.add("models/openvla.md", concept(), body)

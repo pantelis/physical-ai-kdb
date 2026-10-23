@@ -38,7 +38,9 @@ often produces several findings.
 | Rule | Usual fix |
 |---|---|
 | `ground.quote` | copy the sentence word for word from the PDF page; do not paraphrase inside `quote` |
-| `ground.bbox` | recompute the bbox from the text's position on the page, in PDF points with the origin at the bottom left |
+| `ground.bbox` | recompute the bbox from the text's position on the page, in PDF points with the origin at the bottom left; if the message prints a corrected bbox, use it |
+| `project.source` (resource) | write the path from the bundle root with a leading `/`, such as `/papers/fei2025.pdf`; never copy or move the PDF |
+| `project.log` | put each log entry under a `## YYYY-MM-DD` heading with today's date |
 | `ground.highlight` | write a highlight with the same rectangle into the copy in `annotated/` |
 | `project.citation` | make the footnote label equal to a source `id` on the same page |
 | `project.entity` | merge the two pages into one and put the other names in `aliases` |

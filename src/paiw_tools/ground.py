@@ -7,32 +7,16 @@ appear inside its bbox. Every bbox must match a highlight in the annotated copy 
 from __future__ import annotations
 
 import argparse
-import re
-import unicodedata
 from pathlib import Path
 
 import pdfplumber
 
 from . import bundle as B
+from .locate import find_quote, inside
 from .report import Report, fail
 
 TOOL = "okf-ground"
 MIN_IOU = 0.5
-QUOTES = {"‘": "'", "’": "'", "‚": "'", "“": '"', "”": '"', "„": '"'}
-DASHES = {"‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "−": "-"}
-
-
-def normalize(text: str) -> str:
-    """Compare text the way a reader would: ligatures, quotes, dashes, hyphens and spacing undone.
-
-    All whitespace is removed, because PDF text extraction often drops or adds spaces.
-    """
-    text = unicodedata.normalize("NFKC", text)
-    for table in (QUOTES, DASHES):
-        for k, v in table.items():
-            text = text.replace(k, v)
-    text = re.sub(r"(\w)-\s*\n\s*(\w)", r"\1\2", text)
-    return re.sub(r"\s+", "", text)
 
 
 def iou(a: list[float], b: list[float]) -> float:
@@ -44,29 +28,14 @@ def iou(a: list[float], b: list[float]) -> float:
 
 
 class Paper:
-    """One PDF, opened once, with the text and highlights of each page cached."""
+    """One PDF, opened once."""
 
     def __init__(self, path: Path):
         self.pdf = pdfplumber.open(path)
-        self._text: dict[int, str] = {}
 
     @property
     def pages(self) -> int:
         return len(self.pdf.pages)
-
-    def text(self, page_no: int) -> str:
-        if page_no not in self._text:
-            self._text[page_no] = self.pdf.pages[page_no - 1].extract_text() or ""
-        return self._text[page_no]
-
-    def text_in(self, page_no: int, bbox: list[float]) -> str:
-        page = self.pdf.pages[page_no - 1]
-        x0, y0, x1, y1 = bbox
-        top, bottom = page.height - y1, page.height - y0
-        box = (max(x0, 0), max(top, 0), min(x1, page.width), min(bottom, page.height))
-        if box[2] <= box[0] or box[3] <= box[1]:
-            return ""
-        return page.crop(box, strict=False).extract_text() or ""
 
     def highlights(self, page_no: int) -> list[list[float]]:
         page = self.pdf.pages[page_no - 1]
@@ -99,6 +68,18 @@ class Library:
                 paper.close()
 
 
+def where_hint(paper: Paper, page_no: int, bbox: list[float], spans: list[list[float]]) -> str:
+    """Say where the text actually is, and whether the bbox looks measured from the top of the page."""
+    height = paper.pdf.pages[page_no - 1].height
+    x0, y0, x1, y1 = bbox
+    flipped = [x0, height - y1, x1, height - y0]
+    for span in spans:
+        if inside(span, flipped):
+            return (f"; its y looks measured from the top of the page, but bbox y is measured from the bottom"
+                    f" (y = page height - pdfplumber's top/bottom), which gives {[round(v, 1) for v in flipped]}")
+    return f"; the quote is at {[round(v, 1) for v in spans[0]]}"
+
+
 def check(b: B.Bundle, page: B.Page, source: dict, lib: Library, annotated_dir: Path, report: Report) -> bool:
     sid = source.get("id")
     resource, page_no, bbox = source.get("resource"), source.get("page"), source.get("bbox")
@@ -117,14 +98,17 @@ def check(b: B.Bundle, page: B.Page, source: dict, lib: Library, annotated_dir: 
         return True
 
     if "quote" in source:
-        quote = normalize(str(source["quote"]))
-        if quote not in normalize(paper.text(page_no)):
+        spans = find_quote(paper.pdf.pages[page_no - 1], str(source["quote"]))
+        if not spans:
             report.error("ground.quote", page.rel, f"the quote is not on page {page_no}", sid)
-        elif quote not in normalize(paper.text_in(page_no, bbox)):
-            report.error("ground.bbox", page.rel, f"the quote is on page {page_no} but not inside its bbox", sid)
+        elif not any(inside(s, bbox) for s in spans):
+            msg = f"the quote is on page {page_no} but not inside its bbox"
+            report.error("ground.bbox", page.rel, msg + where_hint(paper, page_no, bbox, spans), sid)
     elif "value" in source:
-        if normalize(str(source["value"])) not in normalize(paper.text_in(page_no, bbox)):
-            report.error("ground.bbox", page.rel, f"the value '{source['value']}' is not inside its bbox on page {page_no}", sid)
+        spans = find_quote(paper.pdf.pages[page_no - 1], str(source["value"]))
+        if not any(inside(s, bbox) for s in spans):
+            msg = f"the value '{source['value']}' is not inside its bbox on page {page_no}"
+            report.error("ground.bbox", page.rel, msg + (where_hint(paper, page_no, bbox, spans) if spans else ""), sid)
 
     copy = annotated_dir / path.name
     marked = lib.get(copy)
