@@ -76,13 +76,38 @@ def test_seeding_twice_changes_nothing(bundle, tmp_path):
     assert digest(bundle.root) == before
 
 
-def test_the_shipped_robotics_seed_is_well_formed():
+def test_every_shipped_seed_is_well_formed():
     from importlib.resources import files
-    s = yaml.safe_load(files("kdb_tools.seeds").joinpath("robotics.yaml").read_text())
-    slugs = {t["slug"] for t in s["terms"]}
-    for t in s["terms"]:
-        assert set(t.get("broader", [])) <= slugs, t["slug"]
-        assert t["scope"] and all(q["quote"]["paper"] in s["papers"] for q in t["scope"]), t["slug"]
+    specs = {f.name: yaml.safe_load(f.read_text()) for f in files("kdb_tools.seeds").iterdir() if f.name.endswith(".yaml")}
+    assert {"robotics.yaml", "datasets.yaml", "vla-datasets.yaml"} <= set(specs)
+    domains = {s["domain"] for s in specs.values()}
+    for s in specs.values():
+        assert set(s.get("extends", [])) <= domains
+        local = {t["slug"] for t in s["terms"]}
+        for t in s["terms"]:
+            for b in t.get("broader", []):
+                assert ("/" in b and b.split("/")[0] in s.get("extends", [])) or b in local, (t["slug"], b)
+            assert t["scope"] and all(q["quote"]["paper"] in s["papers"] for q in t["scope"]), t["slug"]
+    assert specs["vla-datasets.yaml"]["extends"] == ["datasets"]
+
+
+def test_a_seed_that_extends_another_writes_its_ontology_page_and_links_upward(bundle, tmp_path):
+    paper(bundle)
+    general = {"domain": "datasets", "title": "Datasets", "papers": {"bridge": "2308.12952"}, "terms": [
+        {"slug": "human-collected", "kind": "collection", "pref_label": "Human-collected",
+         "scope": [{"text": "Human-collected data.", "quote": {"paper": "bridge", "page": 2, "text": SENT}}]}]}
+    special = {"domain": "vla-datasets", "title": "VLA datasets", "extends": ["datasets"], "papers": {"bridge": "2308.12952"},
+               "terms": [{"slug": "teleoperation", "kind": "collection", "pref_label": "Teleoperation",
+                          "broader": ["datasets/collection/human-collected"],
+                          "scope": [{"text": "Teleoperated data.", "quote": {"paper": "bridge", "page": 1, "text": LIST}}]}]}
+    for name, s in (("g.yaml", general), ("s.yaml", special)):
+        (tmp_path / name).write_text(yaml.safe_dump(s, sort_keys=False))
+        assert [f.rule for f in seed(bundle.root, tmp_path / name).findings] == []
+    onto = yaml.safe_load((bundle.root / "ontology/vla-datasets/ontology.md").read_text().split("\n---\n", 1)[0][4:])
+    assert onto["type"] == "Ontology" and onto["extends"] == ["/ontology/datasets/ontology.md"]
+    tele = yaml.safe_load((bundle.root / "ontology/vla-datasets/collection/teleoperation.md").read_text().split("\n---\n", 1)[0][4:])
+    assert tele["broader"] == ["/ontology/datasets/collection/human-collected.md"]
+    assert errors(validate(bundle.root)) == []
 
 
 def errors(report):

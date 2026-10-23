@@ -12,12 +12,15 @@
 # perturbation types, so those terms rest on paper citations alone.
 
 domain: robotics
+title: Robotics
+description: Robot manipulation tasks, benchmarks and suites, robots, perturbation types and model classes.
 papers:
   bridge: '2308.12952'      # BridgeData V2
   calvin: '2112.03227'      # CALVIN
   libero: '2306.03310'      # LIBERO
   libero-plus: '2510.13626' # LIBERO-Plus
   oft: '2502.19645'         # OpenVLA-OFT
+  rt2: '2307.15818'         # RT-2
   simpler: '2405.05941'     # SIMPLER
 
 terms:
@@ -283,3 +286,12 @@ terms:
     scope:
       - text: A sensor noise perturbation adds photometric distortions, such as jitter or Gaussian blur, to the input images.
         quote: {paper: libero-plus, page: 2, text: "Sensor Noise: inject photometric distortions (e.g., jitter, Gaussian blur) into input images."}
+
+  # ---- model classes ----
+  - slug: vision-language-action-model
+    kind: models
+    pref_label: Vision-language-action model
+    alt_labels: [VLA, VLA model, vision-language-action models]
+    scope:
+      - text: RT-2 named this category of models vision-language-action (VLA) models.
+        quote: {paper: rt2, page: 2, text: "We refer to this category of models as vision-language-action (VLA) models."}

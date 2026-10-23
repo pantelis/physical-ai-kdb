@@ -1,0 +1,83 @@
+# Seed ontology for robot learning datasets used by vision-language-action (VLA) models.
+#
+# It extends the general datasets ontology: every term here is a narrower version of a term in
+# datasets.yaml, written as broader: [datasets/<kind>/<slug>]. Arxiv ids are quoted so YAML keeps
+# them as strings.
+
+domain: vla-datasets
+title: VLA datasets
+description: How robot learning data for VLA models is collected and used; a specialization of the datasets ontology.
+extends: [datasets]
+papers:
+  bridge: '2308.12952'      # BridgeData V2
+  calvin: '2112.03227'      # CALVIN
+  oxe: '2310.08864'         # Open X-Embodiment
+  octo: '2405.12213'        # Octo
+  rt2: '2307.15818'         # RT-2
+  oft: '2502.19645'         # OpenVLA-OFT
+
+terms:
+  # ---- collection ----
+  - slug: teleoperation
+    kind: collection
+    pref_label: Teleoperation
+    alt_labels: [teleoperated demonstrations, teleoperated]
+    broader: [datasets/collection/human-collected]
+    scope:
+      - text: Teleoperated demonstrations are recorded while a person controls the robot, in BridgeData V2 with a VR controller.
+        quote: {paper: bridge, page: 4, text: "We collect demonstrations by teleoperating the robot with a VR controller."}
+
+  - slug: scripted-policy
+    kind: collection
+    pref_label: Scripted policy
+    alt_labels: [scripted demonstrations, scripted trajectories]
+    broader: [datasets/collection/programmatically-generated]
+    scope:
+      - text: Part of BridgeData V2 was collected by a heavily randomized scripted policy instead of a person.
+        quote: {paper: bridge, page: 4, text: "During the data collection process, we realized we could partially automate the collection of pick-and-place data with a heavily randomized scripted policy."}
+
+  - slug: simulated-teleoperation
+    kind: collection
+    pref_label: Simulated teleoperation
+    alt_labels: [teleoperation in simulation]
+    broader: [teleoperation, datasets/collection/simulated]
+    scope:
+      - text: CALVIN's data was recorded with an HTC Vive VR headset in its four environments, about six hours in each.
+        quote: {paper: calvin, page: 4, text: "data in four environments with a HTC Vive VR headset, spending an approximately equal time of six hours in each environment."}
+
+  - slug: cross-embodiment-pooling
+    kind: collection
+    pref_label: Cross-embodiment pooling
+    alt_labels: [cross-embodiment dataset, multi-robot dataset]
+    broader: [datasets/collection/pooled]
+    scope:
+      - text: Open X-Embodiment pools more than a million real robot trajectories from 22 robot embodiments.
+        quote: {paper: oxe, page: 3, text: "The Open X-Embodiment Dataset contains 1M+ real robot trajectories spanning 22 robot embodiments"}
+
+  # ---- roles ----
+  - slug: cross-embodiment-pretraining
+    kind: roles
+    pref_label: Cross-embodiment pretraining
+    alt_labels: [generalist pretraining]
+    broader: [datasets/roles/pretraining]
+    scope:
+      - text: Octo is pretrained on 800k robot episodes from the Open X-Embodiment dataset.
+        quote: {paper: octo, page: 1, text: "Octo is a transformer-based policy pretrained on 800k diverse robot episodes from the Open X-Embodiment dataset"}
+
+  - slug: lora-fine-tuning
+    kind: roles
+    pref_label: LoRA fine-tuning
+    alt_labels: [parameter-efficient fine-tuning, LoRA]
+    broader: [datasets/roles/fine-tuning]
+    scope:
+      - text: OpenVLA-OFT adapts OpenVLA with LoRA fine-tuning on small task datasets.
+        quote: {paper: oft, page: 4, text: "We conduct our study using OpenVLA [23] as the base model, adapting it via LoRA fine-tuning [14] due to our relatively small training datasets (500 demonstrations versus 1M demonstrations for pretraining)."}
+
+  - slug: web-data-co-fine-tuning
+    kind: roles
+    pref_label: Co-fine-tuning with web data
+    alt_labels: [co-fine-tuning, web co-training]
+    broader: [datasets/roles/co-training]
+    scope:
+      - text: RT-2 co-fine-tunes vision-language models on robot trajectory data together with Internet-scale vision-language tasks.
+        quote: {paper: rt2, page: 1, text: "we propose to co-fine-tune state-of-the-art vision-language models on both robotic trajectory data and Internet-scale vision-language tasks, such as visual question answering."}

@@ -225,6 +225,50 @@ def check_concept(b: B.Bundle, page: B.Page, listed: set[Path], all_ids: set[str
                 report.error("project.condition", page.rel,
                              f"condition {key} is '{value}'; it must be the path of a Term page under /ontology/<domain>/")
 
+    ancestors = getattr(b, "_ancestors", None)
+    if ancestors is None:
+        ancestors = b._ancestors = ontology_graph(b)
+    if fm.get("model_class") is not None and term_at(b, page, fm["model_class"]) is None:
+        report.error("project.condition", page.rel, f"model_class is '{fm['model_class']}'; it must be the path of a Term page")
+
+    if fm.get("type") == "Dataset":
+        collection = fm.get("collection")
+        if not isinstance(collection, list) or not collection:
+            report.error("project.dataset", page.rel, "a Dataset needs collection: a list of collection-method terms")
+            collection = []
+        for value in collection:
+            target = term_at(b, page, value)
+            if target is None:
+                report.error("project.dataset", page.rel, f"collection '{value}' is not a Term page")
+            elif not in_family(ancestors, term_domain(target.rel), DATASETS):
+                report.error("project.dataset", page.rel,
+                             f"collection '{value}' is not a term of the {DATASETS} ontology or one that extends it")
+        for key in ("embodiments", "tasks", "modalities"):
+            for value in fm.get(key) or []:
+                if term_at(b, page, value) is None:
+                    report.error("project.dataset", page.rel, f"{key} entry '{value}' is not a Term page")
+
+    if "trained_on" in fm:
+        entries = fm["trained_on"]
+        if not isinstance(entries, list):
+            report.error("project.trained-on", page.rel, "trained_on is a list of {dataset, role, source} entries")
+            entries = []
+        for entry in entries:
+            if not isinstance(entry, dict) or not all(k in entry for k in ("dataset", "role", "source")):
+                report.error("project.trained-on", page.rel, "each trained_on entry has dataset, role and source")
+                continue
+            path = B.resolve(b.root, page.rel, entry["dataset"]) if isinstance(entry["dataset"], str) else None
+            target = next((q for q in b.concepts if path is not None and q.path.resolve() == path), None)
+            if target is None or (target.frontmatter or {}).get("type") != "Dataset":
+                report.error("project.trained-on", page.rel, f"dataset '{entry['dataset']}' is not a Dataset page")
+            role = term_at(b, page, entry["role"])
+            if role is None or not in_family(ancestors, term_domain(role.rel), DATASETS):
+                report.error("project.trained-on", page.rel,
+                             f"role '{entry['role']}' is not a term of the {DATASETS} ontology or one that extends it")
+            if entry["source"] not in page.source_ids:
+                report.error("project.trained-on", page.rel, f"source '{entry['source']}' is not a source id on this page",
+                             str(entry["source"]))
+
     if fm.get("type") == "Attested Computation":
         if fm.get("runtime") != "python":
             report.error("project.computation", page.rel, "an Attested Computation has runtime: python")
@@ -256,7 +300,62 @@ def term_at(b: B.Bundle, page: B.Page, value) -> B.Page | None:
     return target if target is not None and is_term(target) and term_domain(target.rel) else None
 
 
+DATASETS = "datasets"  # the general dataset ontology; VLA dataset ontologies extend it
+
+
+def ontology_graph(b: B.Bundle, report: Report | None = None) -> dict[str, set[str]]:
+    """Each domain's ancestors: the ontologies it extends, directly or through others.
+
+    An ontology is declared by ontology/<domain>/ontology.md, a page of type Ontology whose
+    extends field lists the ontology pages it specializes.
+    """
+    direct: dict[str, list[str]] = {}
+    for page in b.concepts:
+        fm = page.frontmatter or {}
+        if fm.get("type") != "Ontology":
+            continue
+        domain = term_domain(page.rel)
+        if domain is None or page.rel != f"ontology/{domain}/ontology.md":
+            if report:
+                report.error("project.ontology", page.rel, "an Ontology page is ontology/<domain>/ontology.md")
+            continue
+        direct[domain] = []
+        extends = fm.get("extends", [])
+        if not isinstance(extends, list):
+            if report:
+                report.error("project.ontology", page.rel, "extends is a list of Ontology page paths")
+            continue
+        for value in extends:
+            path = B.resolve(b.root, page.rel, value) if isinstance(value, str) else None
+            target = next((q for q in b.concepts if path is not None and q.path.resolve() == path), None)
+            if target is None or (target.frontmatter or {}).get("type") != "Ontology":
+                if report:
+                    report.error("project.ontology", page.rel, f"extends '{value}' is not an Ontology page")
+                continue
+            direct[domain].append(term_domain(target.rel))
+    ancestors: dict[str, set[str]] = {}
+    for domain in direct:
+        seen, stack = set(), list(direct[domain])
+        while stack:
+            d = stack.pop()
+            if d == domain:
+                if report:
+                    report.error("project.ontology", f"ontology/{domain}/ontology.md", "ontologies extend each other in a cycle")
+                break
+            if d not in seen:
+                seen.add(d)
+                stack.extend(direct.get(d, []))
+        ancestors[domain] = seen - {domain}
+    return ancestors
+
+
+def in_family(ancestors: dict[str, set[str]], domain: str | None, root: str) -> bool:
+    """True when domain is root or an ontology that extends root."""
+    return domain is not None and (domain == root or root in ancestors.get(domain, set()))
+
+
 def check_terms(b: B.Bundle, report: Report) -> None:
+    ancestors = ontology_graph(b, report)
     terms = [p for p in b.concepts if is_term(p)]
     broader: dict[str, list[str]] = {}
     labels: dict[tuple[str, str], list[tuple[str, str]]] = defaultdict(list)
@@ -284,8 +383,9 @@ def check_terms(b: B.Bundle, report: Report) -> None:
             target = term_at(b, page, value)
             if target is None:
                 report.error("project.term", page.rel, f"broader '{value}' is not a Term page")
-            elif term_domain(target.rel) != domain:
-                report.error("project.term", page.rel, f"broader '{value}' is in the {term_domain(target.rel)} domain, not {domain}")
+            elif term_domain(target.rel) != domain and term_domain(target.rel) not in ancestors.get(domain, set()):
+                report.error("project.term", page.rel,
+                             f"broader '{value}' is in the {term_domain(target.rel)} ontology, which the {domain} ontology does not extend")
             else:
                 broader[page.rel].append(target.rel)
     for start in broader:
@@ -298,13 +398,18 @@ def check_terms(b: B.Bundle, report: Report) -> None:
             if node not in seen:
                 seen.add(node)
                 stack.extend(broader.get(node, []))
-    for (domain, _), entries in sorted(labels.items()):
-        pages = sorted({rel for rel, _ in entries})
-        if len(pages) > 1:
-            names = ", ".join(sorted({name for _, name in entries}))
-            for rel in pages:
-                others = ", ".join(p for p in pages if p != rel)
-                report.error("project.term-label", rel, f"in the {domain} domain the label {names} also names {others}")
+    by_label: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+    for (domain, key), entries in labels.items():
+        for rel, name in entries:
+            by_label[key].append((domain, rel, name))
+    for key, entries in sorted(by_label.items()):
+        for domain, rel, name in entries:
+            clash = sorted({r for d, r, _ in entries if r != rel and
+                            (d == domain or d in ancestors.get(domain, set()) or domain in ancestors.get(d, set()))})
+            if clash:
+                names = ", ".join(sorted({n for _, _, n in entries}))
+                report.error("project.term-label", rel,
+                             f"the label {names} also names {', '.join(clash)} in the {domain} ontology or one it extends or is extended by")
 
 
 def check_entities(b: B.Bundle, report: Report) -> None:

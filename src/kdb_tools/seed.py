@@ -73,15 +73,52 @@ def already_highlighted(annotated: Path, page_no: int, bbox: list[float]) -> boo
         paper.close()
 
 
+def shipped_specs() -> list[tuple[str, dict]]:
+    """The course's seed specs, ordered so that an ontology comes after the ones it extends."""
+    specs = {f.name: yaml.safe_load(f.read_text()) for f in files("kdb_tools.seeds").iterdir() if f.name.endswith(".yaml")}
+    by_domain = {s["domain"]: (name, s) for name, s in specs.items()}
+    ordered, done = [], set()
+
+    def visit(domain: str) -> None:
+        if domain in done or domain not in by_domain:
+            return
+        done.add(domain)
+        for parent in by_domain[domain][1].get("extends", []):
+            visit(parent)
+        ordered.append(by_domain[domain])
+
+    for domain in sorted(by_domain):
+        visit(domain)
+    return ordered
+
+
 def seed(root: Path, spec_path: Path | None = None) -> Report:
+    """Write one seed spec, or every shipped spec when none is given."""
     report = Report(TOOL)
-    spec = yaml.safe_load((spec_path or files("kdb_tools.seeds").joinpath("robotics.yaml")).read_text())
+    if spec_path is None:
+        specs = shipped_specs()
+    else:
+        specs = [(str(spec_path), yaml.safe_load(Path(spec_path).read_text()))]
+    report.extra.update({"written": [], "terms": 0})
+    for name, spec in specs:
+        seed_one(root, name, spec, report)
+    return report
+
+
+def broader_path(domain: str, spec: dict, value: str) -> str:
+    """A broader entry is a slug in the same spec, or <ontology>/<kind>/<slug> in an ontology it extends."""
+    if "/" in value:
+        return f"/ontology/{value}.md"
+    return "/" + term_path(domain, next(t["kind"] for t in spec["terms"] if t["slug"] == value), value)
+
+
+def seed_one(root: Path, name: str, spec: dict, report: Report) -> None:
     domain, papers = spec["domain"], spec["papers"]
     numeric = sorted(k for k, v in papers.items() if not isinstance(v, str))
     if numeric:
-        report.error("seed.spec", str(spec_path or "robotics.yaml"),
+        report.error("seed.spec", name,
                      f"arXiv ids for {', '.join(numeric)} were read as numbers; quote them, as in '2306.03310'")
-        return report
+        return
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     written, listed, marks = [], [], {}
     for term in spec["terms"]:
@@ -110,8 +147,7 @@ def seed(root: Path, spec_path: Path | None = None) -> Report:
         fm = {"type": "Term", "title": term["pref_label"], "pref_label": term["pref_label"],
               "alt_labels": term.get("alt_labels", [])}
         if term.get("broader"):
-            fm["broader"] = ["/" + term_path(domain, next(t["kind"] for t in spec["terms"] if t["slug"] == b), b)
-                             for b in term["broader"]]
+            fm["broader"] = [broader_path(domain, spec, b) for b in term["broader"]]
         for key in ("close_match", "related_match", "exact_match"):
             if term.get(key):
                 fm[key] = term[key]
@@ -128,8 +164,18 @@ def seed(root: Path, spec_path: Path | None = None) -> Report:
         if todo:
             highlight(root / "papers" / f"{arxiv}.pdf", annotated, todo)
 
+    title = spec.get("title", domain.capitalize())
+    onto_fm = {"type": "Ontology", "title": f"{title} ontology",
+               "description": spec.get("description", f"The {domain} ontology seeded by okf-seed.")}
+    if spec.get("extends"):
+        onto_fm["extends"] = [f"/ontology/{e}/ontology.md" for e in spec["extends"]]
+    onto_fm["generated"] = {"by": ACTOR, "at": now}
+    body = "* Terms: [index](index.md)\n" + "".join(f"* Extends: [{e}](/ontology/{e}/ontology.md)\n" for e in spec.get("extends", []))
+    if write_if_changed(root / "ontology" / domain / "ontology.md", onto_fm, body):
+        written.append(f"ontology/{domain}/ontology.md")
+
     index = root / "ontology" / domain / "index.md"
-    lines = [f"# {domain.capitalize()} ontology", ""] + [
+    lines = [f"# {title} ontology", "", "* [About this ontology](ontology.md) - what it covers and what it extends"] + [
         f"* [{label}]({Path(rel).relative_to(f'ontology/{domain}').as_posix()}) - a term" for rel, label in sorted(listed)]
     text = "\n".join(lines) + "\n"
     if not index.exists() or index.read_text() != text:
@@ -138,7 +184,7 @@ def seed(root: Path, spec_path: Path | None = None) -> Report:
     root_index = root / "index.md"
     link = f"(ontology/{domain}/index.md)"
     if root_index.exists() and link not in root_index.read_text():
-        root_index.write_text(root_index.read_text().rstrip("\n") + f"\n* [{domain.capitalize()} ontology]{link} - seed terms\n")
+        root_index.write_text(root_index.read_text().rstrip("\n") + f"\n* [{title} ontology]{link} - seed terms\n")
     if written:
         log = root / "log.md"
         heading = f"## {dt.date.today().isoformat()}"
@@ -146,8 +192,8 @@ def seed(root: Path, spec_path: Path | None = None) -> Report:
         if heading not in text:
             text += f"\n\n{heading}"
         log.write_text(text + f"\n* okf-seed wrote {len(written)} {domain} terms.\n")
-    report.extra.update({"written": written, "terms": len(listed)})
-    return report
+    report.extra["written"] += written
+    report.extra["terms"] += len(listed)
 
 
 def main(argv: list[str] | None = None) -> int:

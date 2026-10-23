@@ -86,21 +86,39 @@ Checks the bundle's structure without opening any PDF.
 | `project.entity` | error | no two pages share a title or alias after normalization; Term pages are checked by `project.term-label` instead |
 | `project.contested` | error | `contested_by` maps a source id on the page to a list of source ids that exist in the bundle |
 | `project.result` | error | a `Result` page has `conditions` with `task`, `benchmark`, `suite`, `trials` and `embodiment` |
-| `project.condition` | error | each of `task`, `benchmark`, `suite`, `embodiment` and, when present, `perturbation` is the path of a Term page under `/ontology/<domain>/` |
-| `project.term` | error | a `Term` page lives under `ontology/<domain>/`, has `pref_label`, lists `alt_labels` as strings, and its `broader` entries are Term paths in the same domain with no cycle |
-| `project.term-label` | error | within one domain, no two Terms share a preferred or alternative label after normalization; the same label may name Terms in two domains |
+| `project.condition` | error | each of `task`, `benchmark`, `suite`, `embodiment` and, when present, `perturbation` is the path of a Term page under `/ontology/<domain>/`; so is a page's `model_class` when it has one |
+| `project.ontology` | error | an `Ontology` page is `ontology/<domain>/ontology.md`, its `extends` lists `Ontology` pages, and no ontologies extend each other in a cycle |
+| `project.term` | error | a `Term` page lives under `ontology/<domain>/`, has `pref_label`, lists `alt_labels` as strings, and its `broader` entries are Term paths in the same ontology or one it extends, with no cycle |
+| `project.term-label` | error | no two Terms share a preferred or alternative label after normalization within one ontology and the ontologies it extends or is extended by; unrelated ontologies may share a label |
+| `project.dataset` | error | a `Dataset` page has a non-empty `collection` of terms from the `datasets` ontology or one that extends it, and its `embodiments`, `tasks` and `modalities`, when present, are Term paths |
+| `project.trained-on` | error | each `trained_on` entry has a `dataset` that is a `Dataset` page, a `role` term from the `datasets` ontology or one that extends it, and a `source` that is a source id on the same page |
 | `project.computation` | error | an `Attested Computation` page has `runtime: python` and either a `computation` file that exists or a `# Computation` python block |
 
 ## The ontology
 
-Conditions name ontology terms, not words, because the same words mean different things in
-different domains: pick-and-place on a robot arm is not pick-and-place in a packing shed. Each
+Conditions name ontology terms, not words, because the same words name different things:
+LIBERO-90 is an evaluation suite of the LIBERO benchmark and also the set of 90 tasks the LIBERO
+paper uses as pretraining data. Each
 term is one page under `ontology/<domain>/`, with fields modelled on W3C SKOS: `pref_label`,
 `alt_labels`, `broader`, and optional `exact_match` links to established vocabularies. Its body
 is a scope note, cited like any other prose. A term's domain is the directory after `ontology/`,
-so labels are unique within a domain and may repeat across domains.
+and each domain is one ontology.
 
-The seed ontology ships as `src/kdb_tools/seeds/robotics.yaml`. Each term lists its labels,
+Ontologies are layered. A page `ontology/<domain>/ontology.md` of type `Ontology` declares the
+ontology and lists in `extends` the ontologies it specializes. A term's `broader` may then point
+into an ontology its own ontology extends, directly or through others, and a label may not be
+reused along that chain, because a specialized ontology refines the terms it inherits and never
+redefines them. Unrelated ontologies may share a label. A query that follows `broader` therefore
+crosses layers: a question about pretraining also finds data used for cross-embodiment
+pretraining, a term of the specialized ontology.
+
+The seed ships as three specs in `src/kdb_tools/seeds/`. `robotics.yaml` covers tasks,
+benchmarks and suites, robots, perturbations and the vision-language-action model class.
+`datasets.yaml` covers how any dataset is collected and the roles a dataset plays in training.
+`vla-datasets.yaml` extends `datasets` for robot learning data: teleoperation is a kind of
+human-collected data, cross-embodiment pooling a kind of pooled data, LoRA fine-tuning a kind of
+fine-tuning. `okf-seed` writes the specs in dependency order, an extended ontology before the
+ones that extend it. Each term lists its labels,
 its `broader` terms, any verified `close_match` or `related_match` identifiers, and one or more
 scope sentences, each with the exact quote from a library paper that supports it. `okf-seed`
 finds every quote in the bundle's own `papers/<arxiv-id>.pdf`, starting with the page the spec
@@ -121,7 +139,7 @@ Opens the PDFs and checks every source against them.
 | Rule | Level | Check |
 |---|---|---|
 | `ground.page` | error | the page exists in the PDF |
-| `ground.quote` | error | the quote appears in the page's characters, in content-stream order, after normalizing whitespace, ligatures, quotes, dashes and line-break hyphens |
+| `ground.quote` | error | the quote appears in the page's characters, after normalizing whitespace, ligatures, quotes, dashes and line-break hyphens. The characters are read in content-stream order, then in reading order, then column by column, for a two-column page drawn line by line across both columns. A match that jumps a gap wider than two characters within a line is text spliced from two columns and does not count |
 | `ground.bbox` | error | at least one occurrence of the quote, or of the table-cell value, lies inside the bbox, with 2 points of slack on each side. The error gives the position of the text, and says so when the bbox looks measured from the top of the page |
 | `ground.highlight` | error | the annotated copy has a highlight on that page whose rectangle overlaps the bbox with intersection over union of at least 0.5 |
 

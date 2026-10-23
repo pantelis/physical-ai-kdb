@@ -13,7 +13,7 @@ grading time, so a clean run here means the mechanical checks will pass.
 | `okf-validate` | the bundle is valid OKF v0.2 and follows the project rules: sources, citations, index, log and one page per entity |
 | `okf-ground` | every quoted sentence is on its cited page and inside its bbox, every table value is inside its bbox, and every bbox matches a highlight in your annotated PDF |
 | `okf-diff` | which pages changed between two versions of the kDB, and whether pages the new paper did not touch stayed byte-identical |
-| `okf-seed` | writes the course's seed ontology into the kDB: one `Term` page per term, each defined by a quote it finds and highlights in your copy of a library paper |
+| `okf-seed` | writes the course's seed ontology into the kDB: one `Ontology` page per ontology (robotics, datasets, and vla-datasets, which extends datasets) and one `Term` page per term, each defined by a quote it finds and highlights in your copy of a library paper |
 
 `okf-validate`, `okf-ground` and `okf-diff` only read your bundle. `okf-seed` writes the ontology pages, their highlights and one log entry. None of the tools calls a model.
 

@@ -1,0 +1,75 @@
+# Seed ontology for datasets in general: how data is collected and what a model uses it for.
+#
+# Specialized dataset ontologies extend this one (see vla-datasets.yaml); their terms point
+# broader to the terms here. The library holds only robotics papers, so the scope sentences
+# quote robotics papers, but each sentence states only the general idea its quote supports.
+# Arxiv ids are quoted so YAML keeps them as strings.
+
+domain: datasets
+title: Datasets
+description: How data is collected, and the roles a dataset plays in training a model.
+papers:
+  bridge: '2308.12952'      # BridgeData V2
+  calvin: '2112.03227'      # CALVIN
+  oxe: '2310.08864'         # Open X-Embodiment
+  oft: '2502.19645'         # OpenVLA-OFT
+  pi0: '2410.24164'         # pi0
+
+terms:
+  # ---- collection ----
+  - slug: human-collected
+    kind: collection
+    pref_label: Human-collected
+    alt_labels: [human demonstrations, collected by people]
+    scope:
+      - text: Data can be collected by people, for example by operating a robot with a VR controller.
+        quote: {paper: bridge, page: 4, text: "We collect demonstrations by teleoperating the robot with a VR controller."}
+
+  - slug: programmatically-generated
+    kind: collection
+    pref_label: Programmatically generated
+    alt_labels: [automatically collected, generated data]
+    scope:
+      - text: Data can be produced by a program instead of a person, such as a randomized scripted policy.
+        quote: {paper: bridge, page: 4, text: "During the data collection process, we realized we could partially automate the collection of pick-and-place data with a heavily randomized scripted policy."}
+
+  - slug: simulated
+    kind: collection
+    pref_label: Simulated
+    alt_labels: [simulation data, synthetic data]
+    scope:
+      - text: Data can be collected in simulation; CALVIN simulates physics with the PyBullet engine for large-scale data collection.
+        quote: {paper: calvin, page: 3, text: "Physics are simulated using the PyBullet physics engine [28], which supports fast GPU rendering for large-scale parallel data collection."}
+
+  - slug: pooled
+    kind: collection
+    pref_label: Pooled from existing datasets
+    alt_labels: [pooled, aggregated dataset, dataset mixture]
+    scope:
+      - text: A dataset can be built by pooling existing datasets.
+        quote: {paper: oxe, page: 3, text: "The dataset was constructed by pooling 60 existing robot datasets from 34 robotic research labs around the world"}
+
+  # ---- roles ----
+  - slug: pretraining
+    kind: roles
+    pref_label: Pretraining
+    alt_labels: [pre-training, pretrained on]
+    scope:
+      - text: Pretraining usually uses far more data than the fine-tuning that follows it.
+        quote: {paper: oft, page: 4, text: "We conduct our study using OpenVLA [23] as the base model, adapting it via LoRA fine-tuning [14] due to our relatively small training datasets (500 demonstrations versus 1M demonstrations for pretraining)."}
+
+  - slug: fine-tuning
+    kind: roles
+    pref_label: Fine-tuning
+    alt_labels: [fine-tuned on, finetuning, post-training]
+    scope:
+      - text: Fine-tuning adapts a pretrained model to new robots and tasks.
+        quote: {paper: oft, page: 1, text: "Despite their strengths, fine-tuning is crucial for satisfactory deployment of VLAs on novel robots and tasks, yet it is unclear what the most effective approach for adaptation is given the large design space."}
+
+  - slug: co-training
+    kind: roles
+    pref_label: Co-training
+    alt_labels: [training mixture, mixed training data]
+    scope:
+      - text: Co-training trains one model on a mixture of datasets from different sources.
+        quote: {paper: pi0, page: 4, text: "We start with a pre-training mixture, which consists of both our own dexterous manipulation datasets and open-source data."}

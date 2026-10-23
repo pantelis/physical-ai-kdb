@@ -120,3 +120,22 @@ def test_a_real_hyphen_at_a_line_break_is_kept(tmp_path):
     with pdfplumber.open(pdf) as doc:
         assert len(find_quote(doc.pages[0], "all tasks in LIBERO-SPATIAL request a bowl.")) == 1
         assert len(find_quote(doc.pages[0], "all tasks in LIBEROSPATIAL request a bowl.")) == 1  # both readings
+
+
+def test_text_spliced_across_two_columns_is_not_a_quote(tmp_path):
+    pdf = tmp_path / "cols.pdf"
+    make_pdf(pdf, [[(72, 700, "DROID consist of 76k demon-"), (320, 700, "dataset is to significantly"),
+                    (72, 686, "stration trajectories in total."), (320, 686, "increase the scene diversity.")]])
+    with pdfplumber.open(pdf) as doc:
+        page = doc.pages[0]
+        assert find_quote(page, "DROID consist of 76k demon- dataset is to significantly") == []
+        assert len(find_quote(page, "DROID consist of 76k demonstration trajectories in total.")) == 1
+
+
+def test_a_table_row_with_wide_gaps_is_found_only_when_gaps_are_allowed(tmp_path):
+    pdf = tmp_path / "row.pdf"
+    make_pdf(pdf, [[(72, 700, "OpenVLA"), (200, 700, "76.5"), (300, 700, "84.7")]])
+    with pdfplumber.open(pdf) as doc:
+        assert find_quote(doc.pages[0], "OpenVLA 76.5 84.7") == []
+        assert len(find_quote(doc.pages[0], "OpenVLA 76.5 84.7", allow_gaps=True)) == 1
+        assert len(find_quote(doc.pages[0], "76.5")) == 1

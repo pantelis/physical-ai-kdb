@@ -249,18 +249,18 @@ def test_broader_points_at_terms_in_the_same_domain_without_cycles(bundle):
     assert errors(validate(bundle.root)) == []
     bundle.add(parent_rel, dict(parent, broader=["/" + child_rel]))
     assert "project.term" in errors(validate(bundle.root))
-    farm_rel, farm = term("Harvesting", domain="agriculture")
-    bundle.add(farm_rel, farm)
+    shelf_rel, shelf = term("Order picking", domain="warehouse")
+    bundle.add(shelf_rel, shelf)
     bundle.add(parent_rel, parent)
-    bundle.add(child_rel, dict(child, broader=["/" + farm_rel]))
+    bundle.add(child_rel, dict(child, broader=["/" + shelf_rel]))
     assert "project.term" in errors(validate(bundle.root))
 
 
 def test_the_same_label_may_name_terms_in_two_domains_but_not_two_in_one(bundle):
     robot_rel, robot = term("Pick and place")
-    farm_rel, farm = term("Pick and place", domain="agriculture")
+    shelf_rel, shelf = term("Pick and place", domain="warehouse")
     bundle.add(robot_rel, robot)
-    bundle.add(farm_rel, farm)
+    bundle.add(shelf_rel, shelf)
     assert errors(validate(bundle.root)) == []
     other_rel, other = term("PnP", alt_labels=["pick-and-place"])
     bundle.add(other_rel, other)
@@ -293,3 +293,106 @@ def test_main_exits_0_when_clean_and_2_when_the_directory_is_missing(bundle, tmp
     bundle.add("models/openvla.md", concept())
     assert main([str(bundle.root)]) == 0
     assert main([str(tmp_path / "nowhere")]) == 2
+
+
+def ontology(bundle, name, extends=()):
+    fm = concept(type="Ontology", title=f"{name} ontology")
+    if extends:
+        fm["extends"] = [f"/ontology/{e}/ontology.md" for e in extends]
+    bundle.add(f"ontology/{name}/ontology.md", fm)
+
+
+def add_dataset_terms(bundle):
+    ontology(bundle, "datasets")
+    ontology(bundle, "vla-datasets", extends=["datasets"])
+    ontology(bundle, "robotics")
+    for label, domain, kind, broader in [
+            ("Human-collected", "datasets", "collection", None),
+            ("Pretraining", "datasets", "roles", None),
+            ("Fine-tuning", "datasets", "roles", None),
+            ("Teleoperation", "vla-datasets", "collection", "/ontology/datasets/collection/human-collected.md"),
+            ("WidowX 250", "robotics", "embodiments", None),
+            ("Pick and place", "robotics", "tasks", None),
+            ("Vision-language-action model", "robotics", "models", None)]:
+        rel, fm = term(label, domain=domain, kind=kind, **({"broader": [broader]} if broader else {}))
+        bundle.add(rel, fm)
+
+
+T = "/ontology"
+DATASET = {"collection": [f"{T}/vla-datasets/collection/teleoperation.md"],
+           "embodiments": [f"{T}/robotics/embodiments/widowx-250.md"],
+           "tasks": [f"{T}/robotics/tasks/pick-and-place.md"]}
+
+
+def trained_on(**over):
+    entry = {"dataset": "/datasets/bridge.md", "role": f"{T}/datasets/roles/pretraining.md", "source": GOOD_SOURCE["id"]}
+    entry.update(over)
+    return [entry]
+
+
+def test_a_term_may_specialize_a_term_in_an_ontology_its_own_extends(bundle):
+    add_dataset_terms(bundle)
+    assert errors(validate(bundle.root)) == []
+
+
+def test_a_term_may_not_specialize_a_term_in_an_ontology_it_does_not_extend(bundle):
+    add_dataset_terms(bundle)
+    rel, fm = term("Wrist camera data", domain="robotics", kind="sensors",
+                   broader=["/ontology/datasets/collection/human-collected.md"])
+    bundle.add(rel, fm)
+    found = [f for f in validate(bundle.root).findings if f.rule == "project.term"]
+    assert found and "does not extend" in found[0].message
+
+
+def test_ontologies_may_not_extend_each_other_in_a_cycle(bundle):
+    ontology(bundle, "datasets", extends=["vla-datasets"])
+    ontology(bundle, "vla-datasets", extends=["datasets"])
+    assert "project.ontology" in errors(validate(bundle.root))
+
+
+def test_a_specialized_ontology_may_not_reuse_a_label_from_one_it_extends(bundle):
+    add_dataset_terms(bundle)
+    rel, fm = term("Pretraining", domain="vla-datasets", kind="roles")
+    bundle.add(rel, fm)
+    assert "project.term-label" in errors(validate(bundle.root))
+
+
+def test_sister_ontologies_may_share_a_label(bundle):
+    add_dataset_terms(bundle)
+    rel, fm = term("Pretraining", domain="robotics", kind="stages")
+    bundle.add(rel, fm)
+    assert "project.term-label" not in errors(validate(bundle.root))
+
+
+def test_a_dataset_page_names_its_collection_with_dataset_terms(bundle):
+    add_dataset_terms(bundle)
+    bundle.add("datasets/bridge.md", concept(type="Dataset", title="BridgeData V2", **DATASET))
+    assert errors(validate(bundle.root)) == []
+    bundle.add("datasets/bridge.md", concept(type="Dataset", title="BridgeData V2", **dict(DATASET, collection=["teleoperated"])))
+    assert "project.dataset" in errors(validate(bundle.root))
+    bundle.add("datasets/bridge.md", concept(type="Dataset", title="BridgeData V2",
+                                             **dict(DATASET, collection=[f"{T}/robotics/tasks/pick-and-place.md"])))
+    found = [f for f in validate(bundle.root).findings if f.rule == "project.dataset"]
+    assert found and "datasets ontology" in found[0].message
+    no_collection = {k: v for k, v in DATASET.items() if k != "collection"}
+    bundle.add("datasets/bridge.md", concept(type="Dataset", title="BridgeData V2", **no_collection))
+    assert "project.dataset" in errors(validate(bundle.root))
+
+
+def test_a_model_trained_on_a_dataset_names_the_page_the_role_and_a_source(bundle):
+    add_dataset_terms(bundle)
+    bundle.add("datasets/bridge.md", concept(type="Dataset", title="BridgeData V2", **DATASET))
+    bundle.add("models/openvla.md", concept(trained_on=trained_on(),
+                                            model_class=f"{T}/robotics/models/vision-language-action-model.md"))
+    assert errors(validate(bundle.root)) == []
+    for bad in [trained_on(dataset="/datasets/missing.md"), trained_on(dataset="/models/openvla.md"),
+                trained_on(role="pretraining"), trained_on(role=f"{T}/robotics/tasks/pick-and-place.md"),
+                trained_on(source="not-a-source-here"), [{"dataset": "/datasets/bridge.md"}]]:
+        bundle.add("models/openvla.md", concept(trained_on=bad))
+        assert "project.trained-on" in errors(validate(bundle.root)), bad
+
+
+def test_a_model_class_must_be_a_term(bundle):
+    add_dataset_terms(bundle)
+    bundle.add("models/openvla.md", concept(model_class="VLA"))
+    assert "project.condition" in errors(validate(bundle.root))
