@@ -19,7 +19,7 @@ grading time, so a clean run here means the mechanical checks will pass.
 
 ## Install
 
-The tools need Python 3.10 or newer and [uv](https://docs.astral.sh/uv/).
+The tools need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv tool install git+https://github.com/pantelis/physical-ai-kdb

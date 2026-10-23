@@ -2,12 +2,13 @@
 name = "kdb-tools"
 version = "0.1.0"
 description = "Checks for the Physical AI kDB project: OKF validation, grounding against PDFs, and snapshot diffs"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "pyyaml>=6",
     "pdfplumber>=0.11",
     "pypdf>=5",
+    "pillow>=13",  # security floor: every Pillow below 13.0.0 has open advisories (GHSA-v9pv-5gc8-w2m6 and others)
 ]
 
 [project.scripts]
@@ -21,6 +22,7 @@ dev = [
     "pytest>=8",
     "reportlab>=4",
     "pypdf>=5",
+    "pillow>=13",  # security floor: every Pillow below 13.0.0 has open advisories (GHSA-v9pv-5gc8-w2m6 and others)
 ]
 
 [build-system]
