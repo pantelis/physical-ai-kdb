@@ -2,7 +2,9 @@
 
 Give two bundle directories, or one bundle directory inside a git repository and two
 revisions with --git. An incremental ingest should change only the pages the new paper
-affects; every other page stays byte-identical and keeps its generated stamp.
+affects; every other page stays byte-identical and keeps its generated stamp. Following OKF
+section 5.2, generated.at marks a page's last meaningful change: a change to the body or to any
+frontmatter key other than the stamps themselves needs a new one.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from . import bundle as B
 from .report import Report, fail
 
 TOOL = "okf-diff"
+STAMPS = {"generated", "verified"}  # record who wrote or checked a page; not its content
 
 
 def files_of(root: Path) -> dict[str, bytes]:
@@ -47,12 +50,14 @@ def compare(old: Path, new: Path) -> Report:
         keys = sorted(k for k in set(fa) | set(fb) if fa.get(k) != fb.get(k))
         body = a.body != b.body
         changed.append({"path": rel, "body": body, "frontmatter": keys})
+        content = body or any(k not in STAMPS for k in keys)
         if not body and not keys:
             report.error("diff.rewrite", rel, "the file was rewritten but its content did not change; leave it byte-identical")
-        elif not body and "generated" in keys:
-            report.error("diff.stamp", rel, "the body did not change, so the page keeps its old generated stamp")
-        elif body and (fa.get("generated") or {}).get("at") == (fb.get("generated") or {}).get("at"):
-            report.warning("diff.stale-stamp", rel, "the body changed but generated.at did not")
+        elif not content and "generated" in keys:
+            report.error("diff.stamp", rel, "the content did not change, so the page keeps its old generated stamp")
+        elif content and (fa.get("generated") or {}).get("at") == (fb.get("generated") or {}).get("at"):
+            what = "the body" if body else "the frontmatter (" + ", ".join(k for k in keys if k not in STAMPS) + ")"
+            report.warning("diff.stale-stamp", rel, f"{what} changed but generated.at did not")
 
     pages = set(old_pages) | set(new_pages)
     old_other = {k: v for k, v in old_files.items() if k not in pages}

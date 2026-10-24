@@ -44,14 +44,29 @@ def test_added_removed_and_changed_pages_are_listed(bundle, tmp_path):
     assert rules(report) == []
 
 
-def test_a_frontmatter_only_change_keeps_the_stamp(bundle, tmp_path):
+def test_a_frontmatter_only_change_without_a_new_stamp_is_a_warning(bundle, tmp_path):
+    # OKF 5.2: generated.at marks the content's last meaningful change, and a new contested_by is one
     bundle.add("models/openvla.md", concept())
     old = snapshot(bundle, tmp_path, "old")
     bundle.add("models/openvla.md", concept(contested_by={"kim2024-p3-s2": ["x"]}))
     report = diff(old, bundle.root)
     [changed] = report.extra["changed"]
     assert changed["body"] is False and changed["frontmatter"] == ["contested_by"]
-    assert rules(report) == []
+    assert rules(report) == [("diff.stale-stamp", "warning", "models/openvla.md")]
+
+
+def test_a_frontmatter_only_change_with_a_new_stamp_is_clean(bundle, tmp_path):
+    bundle.add("models/openvla.md", concept())
+    old = snapshot(bundle, tmp_path, "old")
+    bundle.add("models/openvla.md", concept(contested_by={"kim2024-p3-s2": ["x"]}, generated=NEW_STAMP))
+    assert rules(diff(old, bundle.root)) == []
+
+
+def test_restamping_after_only_a_verification_is_an_error(bundle, tmp_path):
+    bundle.add("models/openvla.md", concept())
+    old = snapshot(bundle, tmp_path, "old")
+    bundle.add("models/openvla.md", concept(verified={"by": "human:ta", "at": "2026-11-03T10:00:00Z"}, generated=NEW_STAMP))
+    assert rules(diff(old, bundle.root)) == [("diff.stamp", "error", "models/openvla.md")]
 
 
 def test_restamping_a_page_whose_body_did_not_change_is_an_error(bundle, tmp_path):

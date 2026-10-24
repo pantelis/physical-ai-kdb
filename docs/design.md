@@ -168,8 +168,12 @@ changed.
 | Rule | Level | Check |
 |---|---|---|
 | `diff.rewrite` | error | a page whose content did not change is byte-identical (no reordered keys or reflowed text) |
-| `diff.stamp` | error | a page whose body did not change kept its `generated` stamp |
-| `diff.stale-stamp` | warning | a page whose body changed has a new `generated.at` |
+| `diff.stamp` | error | a page whose content did not change kept its `generated` stamp |
+| `diff.stale-stamp` | warning | a page whose content changed has a new `generated.at` |
+
+A page's content is its body and every frontmatter key except `generated` and `verified`. OKF section 5.2 defines
+`generated.at` as the time of the content's last meaningful change, so a page that gains a source, an alias or
+a `contested_by` entry needs a new stamp even when its body reads the same.
 
 It also lists changes to `index.md`, `log.md` and the files under `papers/` and `annotated/`, so
 the findings report can be checked against them.
