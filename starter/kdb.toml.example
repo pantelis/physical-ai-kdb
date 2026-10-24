@@ -1,0 +1,4 @@
+# Copy to kdb.toml. Any OpenAI-compatible server works; at grading time we point this at ours.
+base_url = "http://localhost:11434/v1"   # Ollama; llama.cpp, vLLM, SGLang and LM Studio serve the same API
+model = "gemma4:31b-it-qat"
+context = 32768                          # the context the server is configured with, in tokens

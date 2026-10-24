@@ -1,0 +1,31 @@
+[project]
+name = "kdb-agent"
+version = "0.1.0"
+description = "Starter for your Physical AI kDB agent: Pydantic AI plumbing, no extraction"
+requires-python = ">=3.11"
+dependencies = [
+    "physical-ai-kdb",
+    "kdb-tools[agent]",
+    "pydantic-ai-slim[openai]==2.58.0",
+    "pdfplumber>=0.11",
+]
+
+[project.scripts]
+kdb = "kdbagent.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "fpdf2>=2.8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kdbagent"]
+
+[tool.uv.sources]
+physical-ai-kdb = { git = "https://github.com/pantelis/physical-ai-kdb" }
+kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.3.0" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -81,7 +81,8 @@ are the steps it asks for, arranged in the order that works.
 3. Seed the ontology. Run `okf-seed kdb` once. It writes the robotics, datasets and vla-datasets
    ontologies as `Term` pages. Each term is defined by a quote that the tool highlights in your
    copy of a paper. `okf-validate kdb` and `okf-ground kdb` pass on the result.
-4. Build your agent. Write the harness in Python with Pydantic AI. Use typed tools that read a PDF
+4. Build your agent. Start from [`starter/`](starter/README.md), which has the Pydantic AI plumbing,
+   and write the harness in Python with Pydantic AI. Use typed tools that read a PDF
    with page positions, find quotes and table cells with `kdb_tools.locate.find_quote`, write
    highlights with `kdb_tools.annotate.highlight`, and write kDB pages. Make the tools reject a
    bad call, such as a quote that is not on the cited page. The model then gets the error and tries
