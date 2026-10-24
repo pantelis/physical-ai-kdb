@@ -5,75 +5,74 @@ compile a library of 30 papers on vision-language-action models into a grounded 
 (kDB) in the
 [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md),
 then ingest one held-out paper and keep the kDB correct. A kDB is a continuously updated
-information source in which every claim points to the sentence or table cell that supports it,
-and a tool, not a reader's trust, confirms that the evidence is there.
+information source in which every claim points to the sentence or table cell that supports it.
+A tool confirms that the evidence is there.
 
 ## Grounded answers for mission-critical work
 
-A language model writes fluent, confident text whether or not any source supports it. When the
-question is about a film, a wrong answer costs nothing. In industries where a document decides
-what someone does next, it can cost an aircraft, a patient or a plant. A technician follows the
-torque value in a maintenance manual. A pharmacist follows the dose in a drug label. An operator
-follows the step in a reactor procedure. An engineer sizes a motor from a datasheet. In each case
-the answer is only useful if it can be traced to the document that states it, and the trace can
-be checked before anyone acts on it.
+A language model writes fluent, confident text whether or not any source supports it. A wrong
+answer about a film costs nothing. In industries where a document determines what someone does
+next, it can cost an aircraft, a patient or a plant. A technician follows the torque value in a
+maintenance manual. A pharmacist follows the dose in a drug label. An operator follows the step
+in a reactor procedure. An engineer sizes a motor from a datasheet. In each case, the answer is
+useful only when it can be traced to the document that states it. That trace must be checked
+before anyone acts on it.
 
 Courts have already ruled on what happens when that check is skipped. In 2023 a federal court in
 New York sanctioned two lawyers who filed a brief citing court decisions that ChatGPT had
 invented (Mata v. Avianca). In 2024 a Canadian tribunal held Air Canada liable for a refund
-policy that its website chatbot made up (Moffatt v. Air Canada). Neither failure came from a
-model that sounded uncertain. Both answers looked authoritative, and nobody compared them with a
-source.
+policy that its website chatbot made up (Moffatt v. Air Canada). Both answers looked
+authoritative, and nobody compared them with a source.
 
-Retrieval-augmented generation (RAG) narrows the problem but does not close it. Retrieval puts
-relevant passages in front of the model, and the model can still join fragments wrongly, file a
-number under the wrong experiment, or cite a document that does not say what the answer says. A
-citation that a reader has to trust is a pointer, not a proof. Building the reference kDB for
-this project showed how quietly this happens. Two result tables were printed side by side on one
-page of a paper, the extractor read each printed line as one row, and numbers measured on one
+Retrieval-augmented generation (RAG) reduces the problem but does not eliminate it. Retrieval
+puts relevant passages in front of the model. The model can still join fragments wrongly, file a
+number under the wrong experiment, or cite a document that does not support the answer. A
+citation gives the reader a pointer that still needs to be checked. Building the reference kDB
+for this project showed how easily this happens. Two result tables were printed side by side on
+one page of a paper. The extractor read each printed line as one row, so numbers measured on one
 benchmark were filed under another. Every number really was on the cited page, so a check that
-asks only "is this text in the document" passed. It was caught when a number looked wrong and
-someone compared it with the table it came from, and the reader was then fixed to split tables
-that share a line.
+asks only "is this text in the document" passed. Someone caught the problem after a number looked
+wrong and compared it with its source table. The reader was then fixed to split tables that share
+a line.
 
-A kDB is built to make that kind of error visible and checkable. Each claim is compiled once into
-a page and carries its evidence: the paper, the page, the exact sentence or table cell, and the
-box on the page where it appears. `okf-ground` confirms that every one of those is where the page
-says, and the highlight in the annotated PDF lets a person verify a claim in seconds. Results
-state their conditions as ontology terms, so numbers measured under different setups are never
+A kDB makes that kind of error visible and checkable. Each claim is compiled once into a page and
+carries its evidence: the paper, the page, the exact sentence or table cell, and the box on the
+page where it appears. `okf-ground` confirms that each item is where the page says it is. The
+highlight in the annotated PDF lets a person verify a claim in seconds. Results state their
+conditions as ontology terms, which keeps numbers measured under different setups from being
 compared as if they were one. When two sources disagree, the kDB keeps both and records the
-dispute instead of picking a winner. Git history and `okf-diff` show exactly what each new
-document changed, and the question history records which version of the kDB every answer relied
-on. When the kDB does not contain an answer, the right response is to say so, and the project is
-graded on refusing as well as on answering.
+dispute. Git history and `okf-diff` show exactly what each new document changed. The question
+history records which version of the kDB every answer relied on. When the kDB does not contain an
+answer, the correct response is to say so. The project is graded on refusing as well as on
+answering.
 
-These are the properties that auditors and regulators ask for: traceability from every statement
-to its source, a record of what changed and when, and a clear line between what the sources say
-and what they do not. The EU AI Act already requires high-risk AI systems to keep records that
-make their operation traceable. Many of the documents involved cannot leave the organization that
-holds them, because of patient privacy, export control or trade secrets, so this project runs on
-local open-weight models only.
+Auditors and regulators ask for these properties: traceability from every statement to its
+source, a record of what changed and when, and a clear line between what the sources say and what
+they do not. The EU AI Act already requires high-risk AI systems to keep records that make their
+operation traceable. Many of the documents involved cannot leave the organization that holds
+them because of patient privacy, export control or trade secrets. For that reason, this project
+runs on local open-weight models only.
 
-The library here is research on robot learning, but nothing in the method depends on it. Replace
-the 30 papers with an aircraft's maintenance manuals, a drug's regulatory filings or a plant's
-operating procedures, and the same checks apply. That is what you practice in this project:
-building an agent whose every output a tool can verify, measuring it against a RAG baseline on
-correctness and on tokens, and teaching it when the honest answer is that the sources do not say.
+The library here is research on robot learning, but the method applies to other document
+collections. Replace the 30 papers with an aircraft's maintenance manuals, a drug's regulatory
+filings or a plant's operating procedures, and the same checks apply. In this project, you build
+an agent whose every output a tool can verify. You measure it against a RAG baseline on
+correctness and on tokens, and teach it to say when the sources do not contain an answer.
 
-The checks have a limit, and it matters. They prove that a quoted sentence or value is where its
-source says it is; they cannot prove that the sentence supports the claim attached to it. That
-judgment stays with a person, which is why a TA reads a sample of claims at grading time.
+The checks have a limit. They prove that a quoted sentence or value is where its source says it
+is. They cannot prove that the sentence supports the claim attached to it. That judgment stays
+with a person, so a TA reads a sample of claims at grading time.
 
 This repository holds the tools that check your kDB. The checks come from
 [aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb-tools), which other course projects that
-build a kDB share; this repository adds the rules and the seed ontology of this project, and
-installing it gives you both. The course runs the same tools at grading time, so a clean run
+build a kDB share. This repository adds the rules and the seed ontology for this project.
+Installing it gives you both. The course runs the same tools at grading time, so a clean run
 here means the mechanical checks will pass.
 
 ## Your tasks, in order
 
 The project page on aegean.ai is the full statement of the task, the rules and the grading. These
-are the steps it asks for, in the order that works.
+are the steps it asks for, arranged in the order that works.
 
 1. Set up. Install the tools (see [Install](#install)), and run an OpenAI-compatible model server
    with an open-weight model of your choice, such as Ollama, llama.cpp, vLLM, SGLang or LM Studio.
@@ -84,25 +83,25 @@ are the steps it asks for, in the order that works.
    it links, and save each as `kdb/papers/<arxiv-id>.pdf`. Keep the paper marked "ingest last"
    aside. Make `kdb/` a git repository.
 3. Seed the ontology. Run `okf-seed kdb` once. It writes the robotics, datasets and vla-datasets
-   ontologies as `Term` pages, each defined by a quote it highlights in your copy of a paper, and
-   `okf-validate kdb` and `okf-ground kdb` pass on the result.
-4. Build your agent. Write the harness in Python with Pydantic AI: typed tools that read a PDF
+   ontologies as `Term` pages. Each term is defined by a quote that the tool highlights in your
+   copy of a paper. `okf-validate kdb` and `okf-ground kdb` pass on the result.
+4. Build your agent. Write the harness in Python with Pydantic AI. Use typed tools that read a PDF
    with page positions, find quotes and table cells with `kdb_tools.locate.find_quote`, write
    highlights with `kdb_tools.annotate.highlight`, and write kDB pages. Make the tools reject a
-   bad call, such as a quote that is not on the cited page, so the model gets the error and tries
-   again. Check the size of every prompt before you send it: a server cuts a prompt longer than
+   bad call, such as a quote that is not on the cited page. The model then gets the error and tries
+   again. Check the size of every prompt before you send it. A server cuts a prompt longer than
    its context without an error.
 5. Write `ingest <pdf>`. It adds one paper to an existing kDB and changes only the pages that
-   paper affects. Each model, dataset, benchmark and robot gets one page, every result states its
-   conditions as ontology terms, every model names its training datasets in `trained_on`, and a
-   claim a newer paper disputes stays, with `contested_by` pointing at the new sources. It updates
-   `index.md` and appends one entry to `log.md`.
+   paper affects. Each model, dataset, benchmark and robot gets one page. Every result states its
+   conditions as ontology terms, and every model names its training datasets in `trained_on`. A
+   claim that a newer paper disputes stays, with `contested_by` pointing at the new sources. It
+   updates `index.md` and appends one entry to `log.md`.
 6. Build the kDB from the 30 papers, one `ingest` at a time, committing after each. After every
-   paper run `okf-validate kdb` and `okf-ground kdb` and have your agent fix what they report.
+   paper, run `okf-validate kdb` and `okf-ground kdb`, and have your agent fix what they report.
    Test the incremental update yourself: hold one paper out, ingest it last, and run
    `okf-diff kdb --git <before> HEAD`.
 7. Write the question commands. `ask "<question>"` answers from the kDB alone, cites a source
-   for every sentence and says so when the kDB does not contain the answer; `--show` displays each
+   for every sentence and says so when the kDB does not contain the answer. `--show` displays each
    cited region with its highlight. `history` lists earlier questions, and `ask --save` files an
    answer back into the kDB as an `Analysis` page that passes both checks. Keep the history in a
    SQLite file next to the kDB.
@@ -114,8 +113,8 @@ are the steps it asks for, in the order that works.
    as contested.
 10. Submission 2: the updated kDB, the new annotated PDF and the findings report.
 11. The demo. A TA asks your program questions with `ask`, including one that needs several papers
-    and one the library cannot answer, looks at the highlights with `--show`, saves an answer with
-    `--save` and reads your `history`.
+    and one the library cannot answer. The TA looks at the highlights with `--show`, saves an
+    answer with `--save` and reads your `history`.
 
 Stretch goals, for credit beyond the required score, are on the project page: standing queries
 refreshed on every ingest, extensions to the ontology, and a short write-up of how your agent
@@ -162,8 +161,8 @@ graph TB
     class kdb,annotated data
 ```
 
-Green boxes are what you submit, along with your code. The checks only read the kDB, the
-annotated PDFs and the papers; they never call a model.
+Green boxes are what you submit, along with your code. The checks read only the kDB, the
+annotated PDFs and the papers. They never call a model.
 
 | Tool | What it checks |
 |---|---|
@@ -178,12 +177,12 @@ annotated PDFs and the papers; they never call a model.
 
 ### Pluggable rules
 
-The checks are split into a core that every kDB follows and a profile per project. The core is
-[aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb-tools): OKF conformance, sources and
-citations, grounding against the PDFs, diffs, and the ontology machinery. This repository is the
-`vla` profile: the rules for the page types this project needs, and its seed ontology. The AR4
-digital twin project, which builds a kDB of a robot arm's manuals and datasheets, uses the same
-core with a profile of its own.
+The checks are split into a core that every kDB follows and a profile for each project. The core is
+[aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb-tools). It handles OKF conformance, sources
+and citations, grounding against the PDFs, diffs, and the ontology machinery. This repository is
+the `vla` profile. It contains the rules for the page types this project needs and its seed
+ontology. The AR4 digital twin project, which builds a kDB of a robot arm's manuals and
+datasheets, uses the same core with its own profile.
 
 | Rules | Where they live | What they cover |
 |---|---|---|
@@ -195,67 +194,70 @@ core with a profile of its own.
 
 A profile is a small Python object registered as an entry point in the group
 `kdb_tools.profiles`. It names a function that checks one page and a directory of seed specs.
-`okf-validate` runs the core rules on every page and then the rules of each installed profile;
+`okf-validate` runs the core rules on every page, followed by the rules of each installed profile.
 `okf-seed` writes the seeds of the installed profiles. Both take `--profile` to use one profile
 only. Installing this repository installs the core and the `vla` profile together, so the
 commands you run are the ones we grade with.
 
-The split exists so that a fix lands once. A grading tool that two projects copy drifts: a bug
-fixed in one copy stays in the other, and students in two courses are graded by different code.
-It also means a project adds rules without forking the checker. You can do the same for your own
-work: register a profile with extra checks that your agent runs during ingest, such as a rule
-that every result page names its trial count. Grading uses only the course's profile.
+This split lets a fix apply to every project that uses the core. When two projects copy a grading
+tool, a bug fixed in one copy remains in the other. Students in the two courses are then graded
+by different code. The split also lets a project add rules without forking the checker. You can
+use the same approach for your own work. Register a profile with extra checks that your agent
+runs during ingest, such as a rule that every result page names its trial count. Grading uses
+only the course's profile.
 
 ### Files in git are the source of truth
 
-The kDB is a directory of markdown files in a git repository, not a database. Files can be read
-by any tool, diffed, reviewed and reverted, and the grading of the incremental update depends on
-that: `okf-diff` compares two commits and checks that pages a new paper did not touch stayed
-byte-identical. A database or a search index is still useful for answering questions quickly,
-but it is built from the files and can be thrown away and rebuilt. The files are never written
-from it.
+The kDB uses a directory of markdown files in a git repository as its source of truth. Any tool
+can read the files, and they can be diffed, reviewed and reverted. The incremental update depends
+on this arrangement: `okf-diff` compares two commits and checks that pages a new paper did not
+touch stayed byte-identical. A database or a search index can still help answer questions
+quickly, but it is built from the files and can be discarded and rebuilt. It does not write the
+files.
 
 ### Evidence is pinned in PDF coordinates
 
 A source names the paper, the page, the exact quote or table value, and a `bbox` in PDF points
-with the origin at the bottom-left corner of the page. That is the coordinate space PDF
-highlights use, so a bbox can be compared with your highlight directly. Text extractors measure
-from the top of the page; `okf-ground` notices a bbox measured that way and prints the corrected
-one. A table value is checked by its position, not only by its presence, because the same number
-often appears in several tables on a page.
+with the origin at the bottom-left corner of the page. PDF highlights use that coordinate space,
+so a bbox can be compared with your highlight directly. Text extractors measure from the top of
+the page. `okf-ground` notices a bbox measured that way and prints the corrected one. A table
+value is checked by its position as well as its presence because the same number often appears
+in several tables on a page.
 
 ### Quotes are matched in drawing order
 
-A PDF does not store sentences. It stores characters and where to draw them, and text extractors
-reorder lines, so two columns at the same height come out interleaved. `okf-ground` matches a
-quote against the characters in the order the PDF draws them, then in reading order, then column
-by column, and it rejects a match that jumps across the gap between columns: words spliced from
-two columns are not a sentence of the paper. `kdb_tools.locate.find_quote` uses the same
-matcher, so your agent and the checker agree on where a quote is.
+A PDF stores characters and their drawing positions rather than sentences. Text extractors
+reorder lines, so two columns at the same height can come out interleaved. `okf-ground` first
+matches a quote against the characters in the order the PDF draws them. It then tries reading
+order and finally checks column by column. It rejects a match that jumps across the gap between
+columns because words spliced from two columns do not form a sentence in the paper.
+`kdb_tools.locate.find_quote` uses the same matcher, so your agent and the checker agree on where
+a quote is.
 
 ### Terms, not words
 
 The same word names different things across papers. LIBERO-90 is an evaluation suite of the
 LIBERO benchmark and also a set of tasks used as pretraining data. Conditions, dataset properties
-and model classes therefore name `Term` pages of an ontology, with preferred and alternative
-labels and `broader` links in the style of W3C SKOS. Ontologies are layered: `vla-datasets`
-extends `datasets`, so a question about pretraining also finds cross-embodiment pretraining.
-Every term is defined by a sentence quoted from a library paper, grounded like any other claim.
+and model classes therefore name `Term` pages of an ontology. Those pages have preferred and
+alternative labels, with `broader` links in the style of W3C SKOS. Ontologies are layered:
+`vla-datasets` extends `datasets`, so a question about pretraining also finds cross-embodiment
+pretraining. Every term is defined by a sentence quoted from a library paper and grounded like
+any other claim.
 
 ### The checks never call a model
 
-Every check is deterministic: the same bundle gives the same findings on your machine and at
-grading time, at no cost, in seconds. Each tool prints a report for people and, with `--json`,
-one for your agent, and exits with 0 when there are no errors, 1 when there are errors and 2
-when it could not run. The one judgment the tools leave out, whether a cited sentence supports
-its claim, is left to a person on purpose.
+Every check is deterministic, so the same bundle gives the same findings on your machine and at
+grading time. It runs at no cost and finishes in seconds. Each tool prints a report for people.
+With `--json`, it also prints one for your agent. It exits with 0 when there are no errors, 1 when
+there are errors and 2 when it could not run. The tools leave one judgment to a person: whether a
+cited sentence supports its claim.
 
 ### Your agent and our checks are separate
 
-You write the agent that reads papers and writes pages, with any open-weight model behind an
-OpenAI-compatible server. We own the checks. The boundary is the bundle format, so you are free
-to build the agent however you like. The checks grade the kDB it produces, whatever produced it,
-and the demo grades the answers your program gives from that kDB.
+You write the agent that reads papers and writes pages, using any open-weight model behind an
+OpenAI-compatible server. We own the checks. The bundle format defines the boundary, leaving you
+free to build the agent however you like. The checks grade the kDB it produces regardless of how
+it was produced. The demo grades the answers your program gives from that kDB.
 
 ## Install
 
@@ -280,8 +282,8 @@ are no errors, 1 when there are errors and 2 when the tool could not run.
 
 ## Use them from Python
 
-The same checks are a Python package, so your agent can call them as functions and read the
-findings directly. Add it to your project with `uv add git+https://github.com/pantelis/physical-ai-kdb`.
+The same checks are available as a Python package, so your agent can call them as functions and
+read the findings directly. Add it to your project with `uv add git+https://github.com/pantelis/physical-ai-kdb`.
 
 ```python
 from pathlib import Path
@@ -301,11 +303,11 @@ with pdfplumber.open(kdb / "papers" / "fei2025.pdf") as pdf:
 print(spans)  # one [x0, y0, x1, y1] per occurrence, in PDF points from the bottom left
 ```
 
-`find_quote` matches the same way `okf-ground` does, so a bbox it returns passes the check.
+`find_quote` matches text the same way `okf-ground` does, so a bbox it returns passes the check.
 
 To write the highlights into the annotated copy, use `kdb_tools.annotate.highlight`. It finds
-each quote on its page and draws one highlight box per line, so only the quoted words are
-shaded. Give the bbox from your source entry when the text appears more than once on the page:
+each quote on its page and draws one highlight box per line. This shades only the quoted words.
+Give the bbox from your source entry when the text appears more than once on the page:
 
 ```python
 from kdb_tools.annotate import highlight
