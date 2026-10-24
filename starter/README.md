@@ -14,8 +14,11 @@ uv run kdb ingest kdb/papers/2406.09246.pdf
 ## What it does
 
 `kdbagent/config.py` reads the server's `base_url`, the model name and its context size from
-`kdb.toml`, and builds a Pydantic AI model for any OpenAI-compatible server. We grade your agent
-against our own server by changing this file, so keep every server setting in it.
+`kdb.toml`, and builds a Pydantic AI model for any OpenAI-compatible server: a local one or
+OpenRouter. For OpenRouter, set `api_key_env` to the name of the environment variable that holds
+your key, such as `OPENROUTER_API_KEY`. A key written in `kdb.toml` is refused, so it cannot end up
+in a commit. Use a free model or set a credit limit on the key. We grade your agent against our
+own server by changing this file, so keep every server setting in it.
 
 `kdbagent/guard.py` refuses a prompt that would not fit the context. A server that receives a
 longer prompt cuts it without an error, and the model then answers from what is left.

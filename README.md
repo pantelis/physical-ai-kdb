@@ -46,8 +46,9 @@ Audits in regulated industries ask for the same things: a trace from each statem
 source, a record of what changed and when, and a plain answer when the sources say nothing. The
 EU AI Act requires high-risk AI systems to keep records that make their operation traceable.
 Many of these documents cannot leave the organization that holds them, for reasons such as
-patient privacy, export control or trade secrets, which is why this project uses local
-open-weight models only.
+patient privacy, export control or trade secrets, so an agent for them has to run on local
+models. The papers in this project are public, so you may also use OpenRouter (see the next
+section).
 
 The papers in this library are about robot learning, but nothing in the method depends on that.
 With an aircraft's maintenance manuals or a plant's operating procedures in place of the papers,
@@ -65,16 +66,38 @@ build a kDB share. This repository adds the rules and the seed ontology for this
 Installing it gives you both. The course runs the same tools at grading time, so a clean run
 here means the mechanical checks will pass.
 
+## Models and agents you may use
+
+You build the agent yourself, in Python, with Pydantic AI. That agent is what this project is
+about, so no other agent may do its work. Commercial agent products and hosted agent services,
+such as the ChatGPT, Claude or Gemini apps, NotebookLM or a hosted agent platform, are not
+accepted, and neither is a framework that runs its own agent to write the kDB.
+
+The model behind your agent can come from one of three places:
+
+1. A local OpenAI-compatible server with an open-weight model, such as Ollama, llama.cpp, vLLM,
+   SGLang or LM Studio.
+2. A free model on [OpenRouter](https://openrouter.ai/models), whose model ids end in `:free`.
+   Free models are rate limited, so ingest runs slower.
+3. A paid model on OpenRouter, with a strict credit limit set on your API key before you start.
+   One build of the kDB from the 31 papers took our reference agent about 3.6 million input tokens
+   and 0.8 million output tokens, and you will build it many times while you develop.
+
+No other hosted model API is allowed. Keep your OpenRouter key in an environment variable and
+never in a file you commit; the starter reads it from the variable named in `kdb.toml`. The papers
+in the library are public, which is why OpenRouter is allowed here. With private documents, the
+same agent would run on a local model.
+
 ## Your tasks, in order
 
 The project page on aegean.ai is the full statement of the task, the rules and the grading. These
 are the steps it asks for, arranged in the order that works.
 
-1. Set up. Install the tools (see [Install](#install)), and run an OpenAI-compatible model server
-   with an open-weight model of your choice, such as Ollama, llama.cpp, vLLM, SGLang or LM Studio.
-   Your agent reads the server's `base_url` and the model name from a config file, because we run
-   it against our own server at grading time. Local models only: no document text goes to a
-   hosted model API.
+1. Set up. Install the tools (see [Install](#install)), and choose your model as described in
+   [Models and agents you may use](#models-and-agents-you-may-use): a local server, a free OpenRouter
+   model, or a paid OpenRouter model with a credit limit on your key. Your agent reads the
+   `base_url`, the model name and the name of the key's environment variable from `kdb.toml`,
+   because we run it against our own server at grading time.
 2. Get the library. Download the 30 papers listed on the project page, each at the arXiv version
    it links, and save each as `kdb/papers/<arxiv-id>.pdf`. Keep the paper marked "ingest last"
    aside. Make `kdb/` a git repository.
@@ -120,8 +143,8 @@ reads a paper longer than its context window.
 ## Where the tools fit
 
 Orange boxes are what you build. Blue boxes come from the course: the papers you download,
-the seed ontology and the checks in this repository. The model server runs an open-weight model
-of your choice behind an OpenAI-compatible endpoint.
+the seed ontology and the checks in this repository. The model server is a local server or
+OpenRouter, behind an OpenAI-compatible endpoint.
 
 ```mermaid
 graph TB
@@ -251,8 +274,8 @@ cited sentence supports its claim.
 
 ### Your agent and our checks are separate
 
-You write the agent that reads papers and writes pages, using any open-weight model behind an
-OpenAI-compatible server. We own the checks. The bundle format defines the boundary, leaving you
+You write the agent that reads papers and writes pages, with Pydantic AI, using a local model or
+one on OpenRouter. We own the checks. The bundle format defines the boundary, leaving you
 free to build the agent however you like. The checks grade the kDB it produces regardless of how
 it was produced. The demo grades the answers your program gives from that kDB.
 

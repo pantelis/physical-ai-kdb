@@ -86,3 +86,20 @@ def test_the_ingest_agent_can_look_quotes_up_itself(paper):
     agent = ingest.make_agent(scripted({"facts": []})[0], root=paper.parent)
     names = {name for ts in agent.toolsets for name in getattr(ts, "tools", {})}
     assert {"find_quote", "find_value", "check_pages"} <= names
+
+
+def test_openrouter_takes_its_key_from_the_environment(tmp_path, monkeypatch):
+    (tmp_path / "kdb.toml").write_text('base_url = "https://openrouter.ai/api/v1"\nmodel = "qwen/qwen3-32b:free"\n'
+                                       'api_key_env = "OPENROUTER_API_KEY"\n')
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
+    cfg = config.load(tmp_path / "kdb.toml")
+    assert cfg.api_key == "sk-or-test" and config.model_from(cfg).model_name == "qwen/qwen3-32b:free"
+    monkeypatch.delenv("OPENROUTER_API_KEY")
+    with pytest.raises(config.ConfigError, match="OPENROUTER_API_KEY"):
+        config.load(tmp_path / "kdb.toml")
+
+
+def test_a_key_written_into_the_config_file_is_refused(tmp_path):
+    (tmp_path / "kdb.toml").write_text('base_url = "https://openrouter.ai/api/v1"\nmodel = "x"\napi_key = "sk-or-secret"\n')
+    with pytest.raises(config.ConfigError, match="api_key_env"):
+        config.load(tmp_path / "kdb.toml")
