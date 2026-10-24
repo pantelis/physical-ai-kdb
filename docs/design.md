@@ -4,9 +4,7 @@ The checks themselves are [aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb
 [`docs/design.md`](https://github.com/aegean-ai/kdb-tools/blob/main/docs/design.md) describes the
 bundle layout, how paths and bbox coordinates are read, every rule `okf-validate`, `okf-ground`
 and `okf-diff` check for any kDB, and the ontology machinery. This repository is the profile for
-the Physical AI kDB project: the rules for its own page types, its seed ontology, and the
-`okf-checks` skill in `pi/skills/` for students who also use Pi, which tells Pi when to run each
-tool and how to act on the result.
+the Physical AI kDB project: the rules for its own page types and its seed ontology.
 
 ## Rules
 

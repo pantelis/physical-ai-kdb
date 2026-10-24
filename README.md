@@ -267,25 +267,6 @@ found = highlight(
 print(found)  # [True]: one flag per mark; False means the text is not on that page
 ```
 
-## Use them from Pi
-
-If you also use [Pi](https://github.com/earendil-works/pi), this repository is a Pi package
-with one skill, `okf-checks`, which tells an agent when to run each tool and how to act on what
-it reports. Install it in your project:
-
-```bash
-pi install --local git:github.com/pantelis/physical-ai-kdb
-```
-
-Pi loads skills installed in a project only after you trust the project. In the interactive
-terminal it asks you once. A scripted run cannot ask, so it skips the skill unless you pass
-`--approve`. `--print` also reads any piped standard input as part of the prompt, so close it
-when nothing is piped, or the run waits forever:
-
-```bash
-pi --print --approve "Ingest papers/fei2025.pdf into the kDB" < /dev/null
-```
-
 ## The rules in detail
 
 The [kdb-tools design](https://github.com/aegean-ai/kdb-tools/blob/main/docs/design.md) lists
