@@ -10,58 +10,54 @@ A tool confirms that the evidence is there.
 
 ## Grounded answers for mission-critical work
 
-A language model writes fluent, confident text whether or not any source supports it. A wrong
-answer about a film costs nothing. In industries where a document determines what someone does
-next, it can cost an aircraft, a patient or a plant. A technician follows the torque value in a
-maintenance manual. A pharmacist follows the dose in a drug label. An operator follows the step
-in a reactor procedure. An engineer sizes a motor from a datasheet. In each case, the answer is
-useful only when it can be traced to the document that states it. That trace must be checked
-before anyone acts on it.
+A language model writes fluent, confident text whether or not a source supports it. In a chat
+about films a wrong answer costs nothing. Where a document decides what someone does next, the
+cost is real: a technician sets the torque value printed in a maintenance manual, and a
+pharmacist gives the dose on a drug label. Reactor procedures and motor datasheets are used the
+same way. An answer drawn from documents like these is useful only if it can be traced to the
+passage that states it, and someone has to check that trace before acting on it.
 
-Courts have already ruled on what happens when that check is skipped. In 2023 a federal court in
-New York sanctioned two lawyers who filed a brief citing court decisions that ChatGPT had
-invented (Mata v. Avianca). In 2024 a Canadian tribunal held Air Canada liable for a refund
-policy that its website chatbot made up (Moffatt v. Air Canada). Both answers looked
-authoritative, and nobody compared them with a source.
+Two court cases show what happens when nobody checks. In 2023 a federal court in New York
+sanctioned two lawyers who filed a brief citing court decisions that ChatGPT had invented
+(Mata v. Avianca). In 2024 a Canadian tribunal held Air Canada liable for a refund policy its
+website chatbot made up (Moffatt v. Air Canada). Both answers looked authoritative, and nobody
+compared them with a source.
 
-Retrieval-augmented generation (RAG) reduces the problem but does not eliminate it. Retrieval
-puts relevant passages in front of the model. The model can still join fragments wrongly, file a
-number under the wrong experiment, or cite a document that does not support the answer. A
-citation gives the reader a pointer that still needs to be checked. Building the reference kDB
-for this project showed how easily this happens. Two result tables were printed side by side on
-one page of a paper. The extractor read each printed line as one row, so numbers measured on one
-benchmark were filed under another. Every number really was on the cited page, so a check that
-asks only "is this text in the document" passed. Someone caught the problem after a number looked
-wrong and compared it with its source table. The reader was then fixed to split tables that share
-a line.
+Retrieval-augmented generation (RAG) helps by putting relevant passages in front of the model,
+but the model can still combine fragments wrongly or cite a passage that does not support its
+answer. A citation only tells the reader where to look. We ran into this while building the
+reference kDB for this project. One paper prints two result tables side by side, and our
+extractor read each printed line as one row, so numbers from one benchmark were filed under
+another. Every number was on the cited page, so a check that only asks whether the text is in
+the document passed. We found the error when a number looked wrong and someone compared it with
+its table, and we then changed the reader to split tables that share a line.
 
-A kDB makes that kind of error visible and checkable. Each claim is compiled once into a page and
-carries its evidence: the paper, the page, the exact sentence or table cell, and the box on the
-page where it appears. `okf-ground` confirms that each item is where the page says it is. The
-highlight in the annotated PDF lets a person verify a claim in seconds. Results state their
-conditions as ontology terms, which keeps numbers measured under different setups from being
-compared as if they were one. When two sources disagree, the kDB keeps both and records the
-dispute. Git history and `okf-diff` show exactly what each new document changed. The question
-history records which version of the kDB every answer relied on. When the kDB does not contain an
-answer, the correct response is to say so. The project is graded on refusing as well as on
-answering.
+In a kDB, each claim is written once into a page together with its evidence: the paper, the
+page, the exact sentence or table cell, and the box on the page where it appears. `okf-ground`
+checks that the evidence is where the page says it is, and the highlight in the annotated PDF
+lets a person confirm a claim in seconds. Results record their conditions as ontology terms, so
+numbers measured under different setups are not compared with each other. When two sources
+disagree, the kDB keeps both and records the dispute. Git history and `okf-diff` show what each
+new paper changed, and the question history records which version of the kDB each answer used.
+If the kDB does not contain an answer, your program should say so; refusals are graded along
+with answers.
 
-Auditors and regulators ask for these properties: traceability from every statement to its
-source, a record of what changed and when, and a clear line between what the sources say and what
-they do not. The EU AI Act already requires high-risk AI systems to keep records that make their
-operation traceable. Many of the documents involved cannot leave the organization that holds
-them because of patient privacy, export control or trade secrets. For that reason, this project
-runs on local open-weight models only.
+Audits in regulated industries ask for the same things: a trace from each statement to its
+source, a record of what changed and when, and a plain answer when the sources say nothing. The
+EU AI Act requires high-risk AI systems to keep records that make their operation traceable.
+Many of these documents cannot leave the organization that holds them, for reasons such as
+patient privacy, export control or trade secrets, which is why this project uses local
+open-weight models only.
 
-The library here is research on robot learning, but the method applies to other document
-collections. Replace the 30 papers with an aircraft's maintenance manuals, a drug's regulatory
-filings or a plant's operating procedures, and the same checks apply. In this project, you build
-an agent whose every output a tool can verify. You measure it against a RAG baseline on
-correctness and on tokens, and teach it to say when the sources do not contain an answer.
+The papers in this library are about robot learning, but nothing in the method depends on that.
+With an aircraft's maintenance manuals or a plant's operating procedures in place of the papers,
+the same checks apply. In this project you build an agent whose output a tool can verify,
+compare it with a RAG baseline on correctness and token use, and teach it to say when the
+sources have no answer.
 
-The checks have a limit. They prove that a quoted sentence or value is where its source says it
-is. They cannot prove that the sentence supports the claim attached to it. That judgment stays
-with a person, so a TA reads a sample of claims at grading time.
+The checks prove that a quoted sentence or value is where its source says it is. They cannot
+prove that the sentence supports the claim it is attached to, so a TA reads a sample of claims
+at grading time.
 
 This repository holds the tools that check your kDB. The checks come from
 [aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb-tools), which other course projects that
@@ -199,21 +195,21 @@ A profile is a small Python object registered as an entry point in the group
 only. Installing this repository installs the core and the `vla` profile together, so the
 commands you run are the ones we grade with.
 
-This split lets a fix apply to every project that uses the core. When two projects copy a grading
-tool, a bug fixed in one copy remains in the other. Students in the two courses are then graded
-by different code. The split also lets a project add rules without forking the checker. You can
+With one core, a fix reaches every project that uses it. If two projects each kept a copy of
+the grading tool, a bug fixed in one copy would stay in the other, and students in the two
+courses would be graded by different code. The split also lets a project add rules without forking the checker. You can
 use the same approach for your own work. Register a profile with extra checks that your agent
 runs during ingest, such as a rule that every result page names its trial count. Grading uses
 only the course's profile.
 
 ### Files in git are the source of truth
 
-The kDB uses a directory of markdown files in a git repository as its source of truth. Any tool
-can read the files, and they can be diffed, reviewed and reverted. The incremental update depends
-on this arrangement: `okf-diff` compares two commits and checks that pages a new paper did not
+The kDB is a directory of markdown files in a git repository, and those files are its source of
+truth. Any tool can read them, and git can diff, review and revert them. Grading the incremental
+update depends on this: `okf-diff` compares two commits and checks that pages a new paper did not
 touch stayed byte-identical. A database or a search index can still help answer questions
-quickly, but it is built from the files and can be discarded and rebuilt. It does not write the
-files.
+quickly, but it is built from the files, it can be discarded and rebuilt at any time, and
+nothing is written back from it.
 
 ### Evidence is pinned in PDF coordinates
 
@@ -234,7 +230,7 @@ columns because words spliced from two columns do not form a sentence in the pap
 `kdb_tools.locate.find_quote` uses the same matcher, so your agent and the checker agree on where
 a quote is.
 
-### Terms, not words
+### Conditions name ontology terms
 
 The same word names different things across papers. LIBERO-90 is an evaluation suite of the
 LIBERO benchmark and also a set of tasks used as pretraining data. Conditions, dataset properties
