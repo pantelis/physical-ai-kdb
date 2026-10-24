@@ -336,8 +336,8 @@ wheels = [
 
 [[package]]
 name = "kdb-tools"
-version = "0.2.0"
-source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.2.0#240a9332f9c44cff1827d40204955c93831dd587" }
+version = "0.3.0"
+source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.3.0#d941087f24169970e8bfb3c4d87b8deef0c2fddf" }
 dependencies = [
     { name = "pdfplumber" },
     { name = "pillow" },
@@ -403,7 +403,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kdb-tools", git = "https://github.com/aegean-ai/kdb-tools?tag=v0.2.0" },
+    { name = "kdb-tools", git = "https://github.com/aegean-ai/kdb-tools?tag=v0.3.0" },
     { name = "pdfplumber", specifier = ">=0.11" },
     { name = "pillow", specifier = ">=13" },
     { name = "pypdf", specifier = ">=5" },

@@ -41,4 +41,4 @@ packages = ["src/physical_ai_kdb"]
 testpaths = ["tests"]
 
 [tool.uv.sources]
-kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.2.0" }
+kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.3.0" }
