@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent, ModelRetry, RunContext
 
 from . import guard
-from .config import Config, model_from
+from .config import Config, model_from, settings_from
 
 
 class Fact(BaseModel):
@@ -47,11 +47,11 @@ INSTRUCTIONS = (
 )  # yours to improve
 
 
-def make_agent(model, root: Path | None = None) -> Agent[Chunk, ChunkFacts]:
+def make_agent(model, root: Path | None = None, settings: dict | None = None) -> Agent[Chunk, ChunkFacts]:
     """The chunk agent. Given the kDB root, it can also call find_quote, find_value and check_pages
     from kdb-tools, so it can look a quote up before it answers instead of being sent back."""
     agent = Agent(model, deps_type=Chunk, output_type=ChunkFacts, instructions=INSTRUCTIONS, retries=2,
-                  toolsets=[toolset(root)] if root is not None else [])
+                  toolsets=[toolset(root)] if root is not None else [], model_settings=settings or None)
 
     @agent.output_validator
     def quotes_are_on_their_pages(ctx: RunContext[Chunk], out: ChunkFacts) -> ChunkFacts:
@@ -73,7 +73,7 @@ def extract(agent: Agent[Chunk, ChunkFacts], pdf: Path, pages: list[int], prompt
 
 
 def ingest(root: Path, pdf: Path, cfg: Config, pages_per_chunk: int = 3) -> list[Fact]:
-    agent = make_agent(model_from(cfg), root)
+    agent = make_agent(model_from(cfg), root, settings_from(cfg))
     with pdfplumber.open(pdf) as doc:
         texts = [p.extract_text() or "" for p in doc.pages]
     facts: list[Fact] = []

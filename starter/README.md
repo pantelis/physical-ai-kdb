@@ -17,7 +17,9 @@ uv run kdb ingest kdb/papers/2406.09246.pdf
 `kdb.toml`, and builds a Pydantic AI model for any OpenAI-compatible server: a local one or
 OpenRouter. For OpenRouter, set `api_key_env` to the name of the environment variable that holds
 your key, such as `OPENROUTER_API_KEY`. A key written in `kdb.toml` is refused, so it cannot end up
-in a commit. Use a free model or set a credit limit on the key. We grade your agent against our
+in a commit. Use a free model or set a credit limit on the key. `reasoning_effort = "none"`
+stops a model such as Gemma 4 from writing hidden reasoning before every answer, which makes
+each answer several times faster; remove it for a model where reasoning helps. We grade your agent against our
 own server by changing this file, so keep every server setting in it.
 
 `kdbagent/guard.py` refuses a prompt that would not fit the context. A server that receives a

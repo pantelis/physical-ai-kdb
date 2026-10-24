@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{len(facts)} facts")
         else:
             guard.check(args.question, cfg.context)
-            out = ask.answer(ask.make_agent(config.model_from(cfg)), args.kdb, args.question)
+            out = ask.answer(ask.make_agent(config.model_from(cfg), config.settings_from(cfg)), args.kdb, args.question)
             print(out.model_dump_json(indent=1))  # yours: print each claim with its paper, page and quote
     except NotImplementedError as e:
         print(f"kdb {args.cmd}: not written yet: {e}", file=sys.stderr)

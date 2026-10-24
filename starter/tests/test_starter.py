@@ -103,3 +103,17 @@ def test_a_key_written_into_the_config_file_is_refused(tmp_path):
     (tmp_path / "kdb.toml").write_text('base_url = "https://openrouter.ai/api/v1"\nmodel = "x"\napi_key = "sk-or-secret"\n')
     with pytest.raises(config.ConfigError, match="api_key_env"):
         config.load(tmp_path / "kdb.toml")
+
+
+def test_reasoning_effort_reaches_both_agents(tmp_path):
+    (tmp_path / "kdb.toml").write_text('base_url = "http://localhost:11434/v1"\nmodel = "gemma4:31b-it-qat"\nreasoning_effort = "none"\n')
+    cfg = config.load(tmp_path / "kdb.toml")
+    assert config.settings_from(cfg) == {"openai_reasoning_effort": "none"}
+    model = scripted({"facts": []})[0]
+    assert ingest.make_agent(model, settings=config.settings_from(cfg)).model_settings == {"openai_reasoning_effort": "none"}
+    assert ask.make_agent(model, settings=config.settings_from(cfg)).model_settings == {"openai_reasoning_effort": "none"}
+
+
+def test_without_reasoning_effort_nothing_is_sent(tmp_path):
+    (tmp_path / "kdb.toml").write_text('base_url = "http://localhost:11434/v1"\nmodel = "m"\n')
+    assert config.settings_from(config.load(tmp_path / "kdb.toml")) == {}

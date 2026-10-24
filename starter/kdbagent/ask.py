@@ -48,8 +48,9 @@ def sources(root: Path, rel: str) -> dict[str, dict] | None:
     return {s["id"]: s for s in page.sources if isinstance(s, dict) and "id" in s}
 
 
-def make_agent(model) -> Agent[KDB, Answer]:
-    agent = Agent(model, deps_type=KDB, output_type=Answer, instructions=INSTRUCTIONS, retries=2)
+def make_agent(model, settings: dict | None = None) -> Agent[KDB, Answer]:
+    agent = Agent(model, deps_type=KDB, output_type=Answer, instructions=INSTRUCTIONS, retries=2,
+                  model_settings=settings or None)
 
     @agent.tool
     def list_pages(ctx: RunContext[KDB]) -> list[dict]:

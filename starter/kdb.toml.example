@@ -5,6 +5,9 @@
 base_url = "http://localhost:11434/v1"
 model = "gemma4:31b-it-qat"
 context = 32768                          # the context the server is configured with, in tokens
+# Gemma 4 reasons before every answer unless told not to, which makes each answer several times
+# slower. "none" switches that off; delete the line for a model where reasoning helps.
+reasoning_effort = "none"
 
 # OpenRouter, with a free model or with a credit limit set on the key:
 # base_url = "https://openrouter.ai/api/v1"
