@@ -8,6 +8,50 @@ then ingest one held-out paper and keep the kDB correct.
 This repository holds the tools that check your kDB. The course runs the same tools at
 grading time, so a clean run here means the mechanical checks will pass.
 
+## Where the tools fit
+
+Orange boxes are what you build. Blue boxes come from the course: the papers you download,
+the seed ontology and the checks in this repository. The model server runs an open-weight model
+of your choice behind an OpenAI-compatible endpoint.
+
+```mermaid
+graph TB
+    papers["papers/&lt;arxiv-id&gt;.pdf<br/>30 papers, then one more"]
+    reader["PDF reader<br/>text with page positions"]
+    cli["Command line<br/>ingest · ask · history · ask --save"]
+    agent["Agent harness<br/>Pydantic AI, typed tools"]
+    llm["Model server<br/>OpenAI-compatible endpoint"]
+    kdb["kDB: OKF bundle<br/>pages · ontology/ · index.md · log.md"]
+    annotated["annotated/&lt;arxiv-id&gt;.pdf<br/>one highlight per source"]
+    history["SQLite history<br/>questions, citations, kDB commit"]
+    seed["okf-seed<br/>seed ontology"]
+    checks["okf-validate · okf-ground · okf-diff"]
+
+    papers --> reader --> agent
+    cli --> agent
+    agent <--> llm
+    agent -->|"writes pages"| kdb
+    agent -->|"writes highlights"| annotated
+    agent -->|"stores answers"| history
+    seed -->|"Term pages"| kdb
+    kdb --> checks
+    annotated --> checks
+    papers --> checks
+    checks -->|"findings to fix"| agent
+
+    classDef yours fill:#e65100,stroke:#bf360c,color:#fff
+    classDef given fill:#0277bd,stroke:#01579b,color:#fff
+    classDef served fill:#455a64,stroke:#37474f,color:#fff
+    classDef data fill:#2e7d32,stroke:#1b5e20,color:#fff
+    class reader,cli,agent,history yours
+    class papers,seed,checks given
+    class llm served
+    class kdb,annotated data
+```
+
+Green boxes are what you submit, along with your code. The checks only read the kDB, the
+annotated PDFs and the papers; they never call a model.
+
 | Tool | What it checks |
 |---|---|
 | `okf-validate` | the bundle is valid OKF v0.2 and follows the project rules: sources, citations, index, log and one page per entity |
