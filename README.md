@@ -70,6 +70,57 @@ build a kDB share; this repository adds the rules and the seed ontology of this 
 installing it gives you both. The course runs the same tools at grading time, so a clean run
 here means the mechanical checks will pass.
 
+## Your tasks, in order
+
+The project page on aegean.ai is the full statement of the task, the rules and the grading. These
+are the steps it asks for, in the order that works.
+
+1. Set up. Install the tools (see [Install](#install)), and run an OpenAI-compatible model server
+   with an open-weight model of your choice, such as Ollama, llama.cpp, vLLM, SGLang or LM Studio.
+   Your agent reads the server's `base_url` and the model name from a config file, because we run
+   it against our own server at grading time. Local models only: no document text goes to a
+   hosted model API.
+2. Get the library. Download the 30 papers listed on the project page, each at the arXiv version
+   it links, and save each as `kdb/papers/<arxiv-id>.pdf`. Keep the paper marked "ingest last"
+   aside. Make `kdb/` a git repository.
+3. Seed the ontology. Run `okf-seed kdb` once. It writes the robotics, datasets and vla-datasets
+   ontologies as `Term` pages, each defined by a quote it highlights in your copy of a paper, and
+   `okf-validate kdb` and `okf-ground kdb` pass on the result.
+4. Build your agent. Write the harness in Python with Pydantic AI: typed tools that read a PDF
+   with page positions, find quotes and table cells with `kdb_tools.locate.find_quote`, write
+   highlights with `kdb_tools.annotate.highlight`, and write kDB pages. Make the tools reject a
+   bad call, such as a quote that is not on the cited page, so the model gets the error and tries
+   again. Check the size of every prompt before you send it: a server cuts a prompt longer than
+   its context without an error.
+5. Write `ingest <pdf>`. It adds one paper to an existing kDB and changes only the pages that
+   paper affects. Each model, dataset, benchmark and robot gets one page, every result states its
+   conditions as ontology terms, every model names its training datasets in `trained_on`, and a
+   claim a newer paper disputes stays, with `contested_by` pointing at the new sources. It updates
+   `index.md` and appends one entry to `log.md`.
+6. Build the kDB from the 30 papers, one `ingest` at a time, committing after each. After every
+   paper run `okf-validate kdb` and `okf-ground kdb` and have your agent fix what they report.
+   Test the incremental update yourself: hold one paper out, ingest it last, and run
+   `okf-diff kdb --git <before> HEAD`.
+7. Write the question commands. `ask "<question>"` answers from the kDB alone, cites a source
+   for every sentence and says so when the kDB does not contain the answer; `--show` displays each
+   cited region with its highlight. `history` lists earlier questions, and `ask --save` files an
+   answer back into the kDB as an `Analysis` page that passes both checks. Keep the history in a
+   SQLite file next to the kDB.
+8. Submission 1: your code and command-line program, the kDB built from the 30 papers with its
+   ontology, and the annotated PDFs. The paper marked "ingest last" must not be in it.
+9. Ingest the held-out paper with one `ingest`. Run `okf-diff` between Submission 1 and the new
+   commit, and write a findings report of at most two pages: every page that changed and why,
+   every claim the new paper contradicts or supersedes with both sources, and anything you marked
+   as contested.
+10. Submission 2: the updated kDB, the new annotated PDF and the findings report.
+11. The demo. A TA asks your program questions with `ask`, including one that needs several papers
+    and one the library cannot answer, looks at the highlights with `--show`, saves an answer with
+    `--save` and reads your `history`.
+
+Stretch goals, for credit beyond the required score, are on the project page: standing queries
+refreshed on every ingest, extensions to the ontology, and a short write-up of how your agent
+reads a paper longer than its context window.
+
 ## Where the tools fit
 
 Orange boxes are what you build. Blue boxes come from the course: the papers you download,
