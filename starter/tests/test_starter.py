@@ -7,7 +7,8 @@ from fpdf import FPDF
 from pydantic_ai.messages import ModelResponse, RetryPromptPart, ToolCallPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from kdbagent import ask, cli, config, guard, ingest
+from kdb_tools import config, guard
+from kdbagent import ask, cli, ingest
 
 QUOTE = "OpenVLA is trained on 970k robot episodes."
 
@@ -85,7 +86,7 @@ def test_commands_still_to_write_say_so(capsys):
 def test_the_ingest_agent_can_look_quotes_up_itself(paper):
     agent = ingest.make_agent(scripted({"facts": []})[0], root=paper.parent)
     names = {name for ts in agent.toolsets for name in getattr(ts, "tools", {})}
-    assert {"find_quote", "find_value", "check_pages"} <= names
+    assert {"find_quote", "find_value", "find_cell", "check_pages"} <= names
 
 
 def test_openrouter_takes_its_key_from_the_environment(tmp_path, monkeypatch):

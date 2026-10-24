@@ -13,27 +13,32 @@ uv run kdb ingest kdb/papers/2406.09246.pdf
 
 ## What it does
 
-`kdbagent/config.py` reads the server's `base_url`, the model name and its context size from
+Most of the plumbing comes from the `agent` extra of
+[kdb-tools](https://github.com/aegean-ai/kdb-tools), which the robotics project uses too. This
+directory holds only what is specific to this project.
+
+`kdb_tools.config` reads the server's `base_url`, the model name and its context size from
 `kdb.toml`, and builds a Pydantic AI model for any OpenAI-compatible server: a local one or
 OpenRouter. For OpenRouter, set `api_key_env` to the name of the environment variable that holds
 your key, such as `OPENROUTER_API_KEY`. A key written in `kdb.toml` is refused, so it cannot end up
 in a commit. Use a free model or set a credit limit on the key. `reasoning_effort = "none"`
 stops a model such as Gemma 4 from writing hidden reasoning before every answer, which makes
-each answer several times faster; remove it for a model where reasoning helps. We grade your agent against our
-own server by changing this file, so keep every server setting in it.
+each answer several times faster; remove it for a model where reasoning helps. We grade your
+agent against our own server by changing this file, so keep every server setting in it.
 
-`kdbagent/guard.py` refuses a prompt that would not fit the context. A server that receives a
+`kdb_tools.guard` refuses a prompt that would not fit the context. A server that receives a
 longer prompt cuts it without an error, and the model then answers from what is left.
 
-`kdbagent/ingest.py` has an agent whose output is a typed list of facts. Its output validator
-looks up every quote on the page the model named, with `kdb_tools.locate.find_quote`, and sends
-the ones it cannot find back to the model to fix. `ingest()` reads the paper, sends three pages
-at a time and collects the facts. The agent also has the `kdb-tools` agent tools, `find_quote`,
-`find_value` and `check_pages`, so the model can look a quote up before it answers.
+`kdbagent/ingest.py` defines a `Fact` and builds the kdb-tools extraction agent with it. A
+`Fact` is a `kdb_tools.agent.Quote`, so the agent looks up every quote on the page the model
+named and sends the ones it cannot find back to the model to fix. `ingest()` reads the paper
+three pages at a time and collects the facts. The agent also has the kdb-tools agent tools,
+`find_quote`, `find_value`, `find_cell` and `check_pages`, so the model can look a quote up
+before it answers.
 
-`kdbagent/ask.py` has an agent with two tools, `list_pages` and `read_page`, and an answer
-whose every claim must cite source ids that exist on the page it names. The validator sends
-back any claim that does not.
+`kdbagent/ask.py` builds the kdb-tools ask agent. It has two tools, `list_pages` and
+`read_page`, and an answer whose every claim must cite source ids that exist on the page it
+names. The validator sends back any claim that does not.
 
 `kdbagent/cli.py` is the `kdb` command, with `ingest`, `ask` and `history`.
 

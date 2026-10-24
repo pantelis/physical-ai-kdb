@@ -6,7 +6,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import ask, config, guard, ingest
+from kdb_tools import config, guard
+
+from . import ask, ingest
 
 
 def main(argv: list[str] | None = None) -> int:
