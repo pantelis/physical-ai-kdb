@@ -5,8 +5,11 @@ compile a library of 30 papers on vision-language-action models into a grounded 
 [Open Knowledge Format (OKF) v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md),
 then ingest one held-out paper and keep the kDB correct.
 
-This repository holds the tools that check your kDB. The course runs the same tools at
-grading time, so a clean run here means the mechanical checks will pass.
+This repository holds the tools that check your kDB. The checks come from
+[aegean-ai/kdb-tools](https://github.com/aegean-ai/kdb-tools), which other course projects that
+build a kDB share; this repository adds the rules and the seed ontology of this project, and
+installing it gives you both. The course runs the same tools at grading time, so a clean run
+here means the mechanical checks will pass.
 
 ## Where the tools fit
 
@@ -143,8 +146,10 @@ pi --print --approve "Ingest papers/fei2025.pdf into the kDB" < /dev/null
 
 ## The rules in detail
 
-[`docs/design.md`](docs/design.md) lists every rule the tools check, the bundle layout, how
-paths and bbox coordinates are interpreted, and what the tools do not check.
+The [kdb-tools design](https://github.com/aegean-ai/kdb-tools/blob/main/docs/design.md) lists
+the rules every kDB follows, the bundle layout, how paths and bbox coordinates are interpreted,
+and what the tools do not check. [`docs/design.md`](docs/design.md) lists the rules this
+project adds and describes its seed ontology.
 
 ## Develop
 

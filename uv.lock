@@ -336,37 +336,13 @@ wheels = [
 
 [[package]]
 name = "kdb-tools"
-version = "0.1.0"
-source = { editable = "." }
+version = "0.2.0"
+source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.2.0#240a9332f9c44cff1827d40204955c93831dd587" }
 dependencies = [
     { name = "pdfplumber" },
     { name = "pillow" },
     { name = "pypdf" },
     { name = "pyyaml" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pillow" },
-    { name = "pypdf" },
-    { name = "pytest" },
-    { name = "reportlab" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pdfplumber", specifier = ">=0.11" },
-    { name = "pillow", specifier = ">=13" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pyyaml", specifier = ">=6" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pillow", specifier = ">=13" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "reportlab", specifier = ">=4" },
 ]
 
 [[package]]
@@ -403,6 +379,43 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/05/56/6f450312ba05a27d7713b73857c1a25100dbda04fbc1331b13fb227a607d/pdfplumber-0.11.10.tar.gz", hash = "sha256:b95b2d28c66efb0a794a83b88c6c6aea5987532a445d20a1cbcfa657022e6e57", size = 102892, upload-time = "2026-06-15T03:31:31.035Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/9a/07d658e1e7fad860f1c541ab941348125dbdab773be3a0afaf32361866c7/pdfplumber-0.11.10-py3-none-any.whl", hash = "sha256:7741ea81bf165b474b153e6789d10d18e06b6ddcf3ec84289c3ef2fed6802580", size = 60047, upload-time = "2026-06-15T03:31:29.702Z" },
+]
+
+[[package]]
+name = "physical-ai-kdb"
+version = "0.2.0"
+source = { editable = "." }
+dependencies = [
+    { name = "kdb-tools" },
+    { name = "pdfplumber" },
+    { name = "pillow" },
+    { name = "pypdf" },
+    { name = "pyyaml" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pillow" },
+    { name = "pypdf" },
+    { name = "pytest" },
+    { name = "reportlab" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "kdb-tools", git = "https://github.com/aegean-ai/kdb-tools?tag=v0.2.0" },
+    { name = "pdfplumber", specifier = ">=0.11" },
+    { name = "pillow", specifier = ">=13" },
+    { name = "pypdf", specifier = ">=5" },
+    { name = "pyyaml", specifier = ">=6" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pillow", specifier = ">=13" },
+    { name = "pypdf", specifier = ">=5" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "reportlab", specifier = ">=4" },
 ]
 
 [[package]]

@@ -1,21 +1,26 @@
 [project]
-name = "kdb-tools"
-version = "0.1.0"
-description = "Checks for the Physical AI kDB project: OKF validation, grounding against PDFs, and snapshot diffs"
+name = "physical-ai-kdb"
+version = "0.2.0"
+description = "The Physical AI kDB profile for kdb-tools: VLA page rules and the seed ontology"
 requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
+    "kdb-tools",
     "pyyaml>=6",
     "pdfplumber>=0.11",
     "pypdf>=5",
     "pillow>=13",  # security floor: every Pillow below 13.0.0 has open advisories (GHSA-v9pv-5gc8-w2m6 and others)
 ]
 
+# The core's commands, declared here too: uv tool install exposes only this package's own commands.
 [project.scripts]
 okf-validate = "kdb_tools.validate:main"
 okf-ground = "kdb_tools.ground:main"
 okf-diff = "kdb_tools.diff:main"
 okf-seed = "kdb_tools.seed:main"
+
+[project.entry-points."kdb_tools.profiles"]
+vla = "physical_ai_kdb:PROFILE"
 
 [dependency-groups]
 dev = [
@@ -30,7 +35,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/kdb_tools"]
+packages = ["src/physical_ai_kdb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.2.0" }
