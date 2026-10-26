@@ -736,9 +736,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kdb-tools", extras = ["agent", "s3"], editable = "../../kdb-tools" },
+    { name = "kdb-tools", extras = ["agent", "s3"], git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.0" },
     { name = "pdfplumber", specifier = ">=0.11" },
-    { name = "physical-ai-kdb", editable = "../" },
+    { name = "physical-ai-kdb", git = "https://github.com/pantelis/physical-ai-kdb?tag=v0.3.0" },
     { name = "pydantic-ai-slim", extras = ["openai"], specifier = "==2.58.0" },
 ]
 
@@ -751,7 +751,7 @@ dev = [
 [[package]]
 name = "kdb-tools"
 version = "0.5.0"
-source = { editable = "../../kdb-tools" }
+source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.0#4a9deb92a5016e74903f4f13babd47e6d3010c8b" }
 dependencies = [
     { name = "duckdb" },
     { name = "openpyxl" },
@@ -769,32 +769,6 @@ agent = [
 ]
 s3 = [
     { name = "boto3" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "boto3", marker = "extra == 's3'", specifier = ">=1.35" },
-    { name = "duckdb", specifier = ">=2.0,<3" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.3,<3" },
-    { name = "openpyxl", specifier = ">=3.1" },
-    { name = "pdfplumber", specifier = ">=0.11" },
-    { name = "pillow", specifier = ">=13" },
-    { name = "pydantic", specifier = ">=2.7" },
-    { name = "pydantic-ai-slim", extras = ["openai"], marker = "extra == 'agent'", specifier = ">=2.58,<3" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pytz", specifier = ">=2024.1" },
-    { name = "pyyaml", specifier = ">=6" },
-]
-provides-extras = ["agent", "mcp", "s3"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mcp", specifier = ">=2.3,<3" },
-    { name = "pillow", specifier = ">=13" },
-    { name = "pydantic-ai-slim", specifier = ">=2.58,<3" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "reportlab", specifier = ">=4" },
 ]
 
 [[package]]
@@ -885,31 +859,14 @@ wheels = [
 
 [[package]]
 name = "physical-ai-kdb"
-version = "0.2.0"
-source = { editable = "../" }
+version = "0.3.0"
+source = { git = "https://github.com/pantelis/physical-ai-kdb?tag=v0.3.0#58da033fbf47ca6d11e597cf84a21c041b9e611c" }
 dependencies = [
     { name = "kdb-tools" },
     { name = "pdfplumber" },
     { name = "pillow" },
     { name = "pypdf" },
     { name = "pyyaml" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "kdb-tools", editable = "../../kdb-tools" },
-    { name = "pdfplumber", specifier = ">=0.11" },
-    { name = "pillow", specifier = ">=13" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pyyaml", specifier = ">=6" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pillow", specifier = ">=13" },
-    { name = "pypdf", specifier = ">=5" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "reportlab", specifier = ">=4" },
 ]
 
 [[package]]
