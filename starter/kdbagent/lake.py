@@ -22,7 +22,7 @@ import yaml
 from kdb_tools import lake as L
 from kdb_tools.actions import Context, Failed
 from kdb_tools.actions.adopt import AdoptBundle
-from kdb_tools.actions.types import SeedOntology, binding_dict, find_class, parse_binding, table_columns
+from kdb_tools.actions.types import BindTable, SeedOntology, binding_dict, find_class, table_columns
 from kdb_tools.report import Report
 from kdb_tools.seed import CORE_SEEDS, seed_action
 
@@ -171,14 +171,19 @@ def _seed(ctx: Context) -> list[str]:
 
 
 def _bind(ctx: Context) -> list[str]:
-    def bound(iri: str, binding: dict) -> bool:
+    """Bind each VLA class that has no binding yet, or whose table is missing. A class whose binding
+    a person changed, for example by adding a column, keeps that binding."""
+    def needs_binding(iri: str) -> bool:
         _, _, k = find_class(ctx, iri)
-        return binding_dict(k) == parse_binding(binding)[0] and table_columns(ctx, binding["table"]) is not None
+        current = binding_dict(k)
+        return not current or table_columns(ctx, current["table"]) is None
 
-    if all(bound(iri, b) for iri, b in physical_ai_kdb.bindings().items()):
+    todo = {iri: b for iri, b in physical_ai_kdb.bindings().items() if needs_binding(iri)}
+    if not todo:
         return []
     try:
-        physical_ai_kdb.bind_tables(ctx)
+        for iri, binding in todo.items():
+            BindTable().submit(ctx, {"class_iri": iri, "binding": binding})
     except Failed as e:
         raise LakeError("\n".join(e.messages))
-    return ["bound each VLA class to its table (BindTable)"]
+    return [f"bound {len(todo)} of the VLA classes to their tables (BindTable)"]

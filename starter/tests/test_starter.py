@@ -209,6 +209,26 @@ def test_lake_init_seeds_the_vla_classes_active_and_only_a_person_changes_them(i
         person.lake.close()
 
 
+def test_rerunning_lake_init_keeps_a_binding_a_person_extended(initialized):
+    import physical_ai_kdb
+
+    person = KL.open_context(initialized / "kdb.toml", initialized / "kdb")
+    try:
+        binding = physical_ai_kdb.bindings()[MODEL]
+        wider = dict(binding, columns=dict(binding["columns"], notes="https://kdb.aegean.ai/core/properties/description"))
+        KdbTools(person.root, [], person).submit("BindTable", {"class_iri": MODEL, "binding": wider})
+    finally:
+        person.lake.close()
+    before = action_count(initialized)
+    assert kdb(initialized, "lake", "init", "--team", TEAM) == 0
+    assert action_count(initialized) == before
+    person = KL.open_context(initialized / "kdb.toml", initialized / "kdb")
+    try:
+        assert "notes" in KdbTools(person.root, [], person).get_class(MODEL)["binding"]["columns"]
+    finally:
+        person.lake.close()
+
+
 def test_lake_init_refuses_another_team_for_the_same_lake(initialized, capsys):
     assert kdb(initialized, "lake", "init", "--team", "team-8") == 1
     assert TEAM in capsys.readouterr().err
