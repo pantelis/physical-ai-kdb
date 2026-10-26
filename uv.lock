@@ -376,8 +376,8 @@ wheels = [
 
 [[package]]
 name = "kdb-tools"
-version = "0.5.0"
-source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.0#4a9deb92a5016e74903f4f13babd47e6d3010c8b" }
+version = "0.5.1"
+source = { git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.1#825b9678c7d2388d64cb61a4add9c414696c1b6c" }
 dependencies = [
     { name = "duckdb" },
     { name = "openpyxl" },
@@ -439,7 +439,7 @@ wheels = [
 
 [[package]]
 name = "physical-ai-kdb"
-version = "0.3.0"
+version = "0.3.1"
 source = { editable = "." }
 dependencies = [
     { name = "kdb-tools" },
@@ -459,7 +459,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "kdb-tools", git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.0" },
+    { name = "kdb-tools", git = "https://github.com/aegean-ai/kdb-tools?tag=v0.5.1" },
     { name = "pdfplumber", specifier = ">=0.11" },
     { name = "pillow", specifier = ">=13" },
     { name = "pypdf", specifier = ">=5" },

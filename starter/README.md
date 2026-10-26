@@ -49,8 +49,10 @@ in that folder or the nearest folder above it, wherever you run them.
 
 The local lake needs nothing else, and the tests use it. If you want S3 storage, you can run
 RustFS in Docker on your own machine instead. Choose this before your first `lake init`, as
-`kdb.toml.example` explains. The RustFS key and secret come from the environment variables that
-`kdb.toml` names in `key_env` and `secret_env`. `compose.yml` uses local defaults when they are not
+`kdb.toml.example` explains. The first `lake init` writes `compose.yml` and then stops, because
+RustFS is not running yet. Start it with `docker compose up -d`, create the bucket that `data_path`
+names, and run `lake init` again. The RustFS key and secret come from the environment variables
+that `kdb.toml` names in `key_env` and `secret_env`. `compose.yml` uses local defaults when they are not
 set, and it opens its ports only on your own machine. Never run `docker compose down -v`, because
 it deletes the volume that holds your data.
 
