@@ -14,3 +14,24 @@ reasoning_effort = "none"
 # model = "<a model id from openrouter.ai/models, such as one ending in :free>"
 # context = 32768
 # api_key_env = "OPENROUTER_API_KEY"
+
+# Your lake. `kdb lake init --team <team>` adds this table below, local by default: a catalog file
+# and a data folder next to this file. Keep the model settings above it.
+#
+# [lake]
+# catalog = "lake/catalog.ducklake"
+# data_path = "lake/data/"
+# team = "team-7"
+# iri_base = "https://data.aegean.ai/vla/team-7/"
+#
+# To keep the data in RustFS instead (S3 storage on your own machine), decide before your first
+# lake init. Write the [lake] table yourself with the lines above, but with data_path replaced by
+# the four lines below. The first lake init writes compose.yml and stops, because RustFS is not
+# running yet. Start it with `docker compose up -d` and run lake init again. key_env and
+# secret_env name environment variables, so the key is never written here. compose.yml uses
+# kdblocal and kdblocalsecret when the variables are not set; set them to the same values so kdb
+# can reach RustFS.
+# data_path = "s3://kdb/lake/"
+# s3_endpoint = "http://localhost:9000"
+# key_env = "RUSTFS_ACCESS_KEY"
+# secret_env = "RUSTFS_SECRET_KEY"

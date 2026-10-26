@@ -1,6 +1,6 @@
 [project]
 name = "physical-ai-kdb"
-version = "0.2.0"
+version = "0.3.0"
 description = "The Physical AI kDB profile for kdb-tools: VLA page rules and the seed ontology"
 requires-python = ">=3.11"
 license = "MIT"
@@ -41,4 +41,4 @@ packages = ["src/physical_ai_kdb"]
 testpaths = ["tests"]
 
 [tool.uv.sources]
-kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.4.0" }
+kdb-tools = { git = "https://github.com/aegean-ai/kdb-tools", tag = "v0.5.0" }

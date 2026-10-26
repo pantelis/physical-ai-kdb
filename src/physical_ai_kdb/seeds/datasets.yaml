@@ -6,6 +6,7 @@
 # Arxiv ids are quoted so YAML keeps them as strings.
 
 domain: datasets
+base_iri: https://kdb.aegean.ai/datasets/
 title: Datasets
 description: How data is collected, and the roles a dataset plays in training a model.
 papers:
