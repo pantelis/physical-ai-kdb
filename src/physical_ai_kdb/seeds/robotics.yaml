@@ -12,6 +12,7 @@
 # perturbation types, so those terms rest on paper citations alone.
 
 domain: robotics
+base_iri: https://kdb.aegean.ai/robotics/
 title: Robotics
 description: Robot manipulation tasks, benchmarks and suites, robots, perturbation types and model classes.
 papers:

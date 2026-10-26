@@ -5,6 +5,7 @@
 # them as strings.
 
 domain: vla-datasets
+base_iri: https://kdb.aegean.ai/vla-datasets/
 title: VLA datasets
 description: How robot learning data for VLA models is collected and used; a specialization of the datasets ontology.
 extends: [datasets]

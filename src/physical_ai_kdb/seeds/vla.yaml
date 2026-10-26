@@ -1,0 +1,236 @@
+# Seed ontology for the VLA classes: the types of the rows a team's lake holds.
+#
+# The kDB holds types only. A paper, model, dataset, training link, result, contested claim,
+# computation or analysis is a row of the table its class binds, never a page. okf-seed writes the
+# Property and Class pages below; it does not write a binding, which only the BindTable action
+# does. physical_ai_kdb.bind_tables runs BindTable with the binding given here for each class.
+# Every class is seeded active: its IRI, table and key stay fixed. A person seeds and binds them
+# (kdb lake init runs as you); an action by an agent that would create or change one is refused.
+#
+# Condition columns (task, benchmark, suite, embodiment, perturbation), model_class, role and the
+# dataset lists hold Term IRIs from the robotics, datasets and vla-datasets ontologies. A column
+# maps to a property slug of this spec or to the full IRI of a core property.
+
+domain: vla
+title: VLA
+description: The classes of the rows a VLA kDB holds, from papers to reported results, and the properties of their columns.
+base_iri: https://kdb.aegean.ai/vla/
+extends: [core]
+
+properties:
+  - slug: arxiv_id
+    title: arXiv id
+    datatype: string
+    required: true
+    scope: The arXiv identifier of a paper, such as 2406.09246.
+  - slug: version
+    title: Version
+    datatype: string
+    scope: The version of a paper on arXiv, such as v3.
+  - slug: media
+    title: Media
+    datatype: string
+    required: true
+    scope: The SHA-256 digest of the PDF of a paper, as registered in the media table.
+  - slug: model_class
+    title: Model class
+    datatype: iri
+    scope: The kind of model, as a term of the robotics ontology.
+  - slug: collection
+    title: Collection
+    datatype: iri_list
+    scope: How the data of a dataset was collected, as terms of the datasets ontology or one that extends it.
+  - slug: embodiments
+    title: Embodiments
+    datatype: iri_list
+    scope: The robots whose data a dataset holds, as terms.
+  - slug: tasks
+    title: Tasks
+    datatype: iri_list
+    scope: The tasks a dataset shows, as terms.
+  - slug: modalities
+    title: Modalities
+    datatype: iri_list
+    scope: The kinds of data a dataset records, such as images or joint states, as terms.
+  - slug: model
+    title: Model
+    datatype: iri
+    scope: The IRI of a model row.
+  - slug: dataset
+    title: Dataset
+    datatype: iri
+    scope: The IRI of a dataset row.
+  - slug: role
+    title: Role
+    datatype: iri
+    scope: What a model uses a dataset for, such as pretraining, as a term of the datasets ontology or one that extends it.
+  - slug: task
+    title: Task
+    datatype: iri
+    scope: The task a result was measured on, as a term.
+  - slug: benchmark
+    title: Benchmark
+    datatype: iri
+    scope: The benchmark a result was measured on, as a term.
+  - slug: suite
+    title: Suite
+    datatype: iri
+    scope: The suite of the benchmark a result was measured on, as a term.
+  - slug: embodiment
+    title: Embodiment
+    datatype: iri
+    scope: The robot a result was measured on, as a term.
+  - slug: perturbation
+    title: Perturbation
+    datatype: iri
+    scope: The perturbation applied when a result was measured, as a term.
+  - slug: trials
+    title: Trials
+    datatype: integer
+    scope: The number of trials a result was measured over.
+  - slug: trials_reported
+    title: Trials reported
+    datatype: boolean
+    scope: Whether the paper states the number of trials. False means it does not, and trials is empty.
+  - slug: value
+    title: Value
+    datatype: double
+    scope: The number a result reports or a computation gives.
+  - slug: metric
+    title: Metric
+    datatype: string
+    scope: What the value of a result measures, such as success rate.
+  - slug: claim
+    title: Claim
+    datatype: string
+    scope: The statement that is contested, as <row IRI>#evidence/<index>, an entry of that row's evidence counted from 0.
+  - slug: disputed_by
+    title: Disputed by
+    datatype: string_list
+    scope: The statements that dispute a claim, each as <row IRI>#evidence/<index>. The list is never empty.
+  - slug: code
+    title: Code
+    datatype: string
+    scope: The Python code of a computation.
+  - slug: inputs
+    title: Inputs
+    datatype: string_list
+    scope: The values a computation reads, each as <row IRI>#<column>. The list is never empty.
+  - slug: question
+    title: Question
+    datatype: string
+    scope: The question an analysis answers.
+  - slug: answer
+    title: Answer
+    datatype: string
+    scope: The answer an analysis gives.
+  - slug: drew_on
+    title: Drew on
+    datatype: iri_list
+    scope: The rows an analysis drew on.
+
+classes:
+  - slug: paper
+    title: Paper
+    scope: A paper in the library, stored as a PDF in the media table.
+    status: active
+    binding:
+      table: papers
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        arxiv_id: arxiv_id
+        version: version
+        media: media
+  - slug: model
+    title: Model
+    scope: A model that a paper describes or evaluates.
+    status: active
+    binding:
+      table: models
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        aliases: https://kdb.aegean.ai/core/properties/aliases
+        description: https://kdb.aegean.ai/core/properties/description
+        model_class: model_class
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: dataset
+    title: Dataset
+    scope: A dataset that a model is trained or evaluated on.
+    status: active
+    binding:
+      table: datasets
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        aliases: https://kdb.aegean.ai/core/properties/aliases
+        description: https://kdb.aegean.ai/core/properties/description
+        collection: collection
+        embodiments: embodiments
+        tasks: tasks
+        modalities: modalities
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: trained-on
+    title: Trained on
+    scope: A model trained on a dataset in a stated role, with the evidence that says so.
+    status: active
+    binding:
+      table: trained_on
+      title: model
+      columns:
+        model: model
+        dataset: dataset
+        role: role
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: result
+    title: Result
+    scope: A number a paper reports for a model, under stated conditions.
+    status: active
+    binding:
+      table: results
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        model: model
+        task: task
+        benchmark: benchmark
+        suite: suite
+        embodiment: embodiment
+        perturbation: perturbation
+        trials: trials
+        trials_reported: trials_reported
+        value: value
+        metric: metric
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: contested
+    title: Contested claim
+    scope: A claim that other statements dispute.
+    status: active
+    binding:
+      table: contested
+      title: claim
+      columns:
+        claim: claim
+        disputed_by: disputed_by
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: computation
+    title: Computation
+    scope: A value computed by Python code from values in other rows.
+    status: active
+    binding:
+      table: computations
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        code: code
+        inputs: inputs
+        value: value
+        evidence: https://kdb.aegean.ai/core/properties/evidence
+  - slug: analysis
+    title: Analysis
+    scope: An answer to a question, drawn from rows of the kDB.
+    status: active
+    binding:
+      table: analyses
+      columns:
+        title: https://kdb.aegean.ai/core/properties/title
+        question: question
+        answer: answer
+        drew_on: drew_on
+        evidence: https://kdb.aegean.ai/core/properties/evidence
